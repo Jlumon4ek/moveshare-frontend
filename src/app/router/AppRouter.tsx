@@ -3,8 +3,8 @@ import { SignUpPage } from '../../pages/SignUpPage/SignUpPage';
 import { SignInPage } from '../../pages/SignInPage/SignInPage';
 import { ForgotPasswordPage } from '../../pages/ForgotPasswordPage/ForgotPasswordPage';
 import { ResetPasswordPage } from '../../pages/ResetPasswordPage/ResetPasswordPage';
-import { DashboardPage } from '../../pages/DashboardPage/DashboardPage';
 import { ProtectedRoute } from '../../shared/lib/auth/ProtectedRoute';
+
 
 export const AppRouter = () => {
   return (
@@ -55,14 +55,6 @@ export const AppRouter = () => {
           } 
         />
         
-        <Route 
-          path="/dashboard" 
-          element={
-            <ProtectedRoute requireAuth={true}>
-              <DashboardPage />
-            </ProtectedRoute>
-          } 
-        />
       </Routes>
     </BrowserRouter>
   );
