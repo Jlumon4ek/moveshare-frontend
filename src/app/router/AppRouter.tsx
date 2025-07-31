@@ -12,6 +12,7 @@ import { CompanyInformation } from '../../widgets/CompanyInformation/ui/CompanyI
 import { PaymentSettings } from '../../widgets/PaymentSettings/ui/PaymentSettings';
 import { NotificationSettings } from '../../widgets/NotificationSettings/ui/NotificationSettings';
 import { SecuritySettings } from '../../widgets/SecuritySettings/ui/SecuritySettings';
+import { MyJobsPage } from '../../pages/MyJobsPage/MyJobsPage';
 
 
 export const AppRouter = () => {
@@ -61,9 +62,10 @@ export const AppRouter = () => {
         >
           <Route index element={<Navigate to="/dashboard" replace />} />
           <Route path="dashboard" element={<DashboardPage />} />
-
+          <Route path="my-jobs" element={<MyJobsPage />} />
+          
           <Route path="profile" element={<ProfilePage />}>
-            <Route index element={<Navigate to="fleet" replace />} />
+            <Route index element={<Navigate to="company" replace />} />
             <Route path="fleet" element={<FleetManagement />} />
             <Route path="company" element={<CompanyInformation />} /> 
             <Route path="payment" element={<PaymentSettings />} />

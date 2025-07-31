@@ -5,14 +5,16 @@ export const apiRequest = async (
   options: RequestInit = {}
 ): Promise<any> => {
   const url = `${API_BASE_URL}${endpoint}`;
-  
+
+  const isFormData = options.body instanceof FormData;
+
   const config: RequestInit = {
+    ...options,
     headers: {
-      'Content-Type': 'application/json',
+      ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
       'Accept': 'application/json',
       ...options.headers,
     },
-    ...options,
   };
 
   try {
@@ -21,6 +23,10 @@ export const apiRequest = async (
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
       throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+    }
+
+    if (response.status === 204) {
+      return; 
     }
 
     return await response.json();

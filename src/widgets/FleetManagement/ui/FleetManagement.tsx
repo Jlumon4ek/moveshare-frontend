@@ -1,25 +1,76 @@
-import { useState } from 'react';
-import { TruckCard, type TruckData } from '../../../entities/Truck/ui/TruckCard';
+import { useState, useEffect } from 'react';
+import { Truck } from 'lucide-react';
+import { TruckCard } from '../../../entities/Truck/ui/TruckCard';
 import { Button } from '../../../shared/ui/Button/Button';
-import { AddTruckModal } from '../../../widgets/AddTruckModal/AddTruckModal';
-
-const mockTrucks: TruckData[] = [
-  { name: 'Volvo Semi', type: 'Semi-Trailer', size: '53 ft', capacity: '45,000 lbs', features: 'Liftgate, Air Ride' },
-  { name: 'Ford Box Truck', type: 'Box Truck', size: '26 ft', capacity: '10,000 lbs', features: 'Liftgate' },
-  { name: 'Freightliner', type: 'Flatbed', size: '48 ft', capacity: '40,000 lbs', features: 'Tarp System' },
-  { name: 'Volvo Semi', type: 'Semi-Trailer', size: '53 ft', capacity: '45,000 lbs', features: 'Liftgate, Air Ride' },
-  { name: 'Peterbilt 579', type: 'Semi-Trailer', size: '53 ft', capacity: '46,000 lbs', features: 'Air Ride' },
-  { name: 'Kenworth T680', type: 'Semi-Trailer', size: '53 ft', capacity: '45,500 lbs', features: 'Liftgate' },
-  { name: 'Volvo Semi', type: 'Semi-Trailer', size: '53 ft', capacity: '45,000 lbs', features: 'Liftgate, Air Ride' },
-  { name: 'Ford Box Truck', type: 'Box Truck', size: '26 ft', capacity: '10,000 lbs', features: 'Liftgate' },
-  { name: 'Freightliner', type: 'Flatbed', size: '48 ft', capacity: '40,000 lbs', features: 'Tarp System' },
-  { name: 'Volvo Semi', type: 'Semi-Trailer', size: '53 ft', capacity: '45,000 lbs', features: 'Liftgate, Air Ride' },
-  { name: 'Peterbilt 579', type: 'Semi-Trailer', size: '53 ft', capacity: '46,000 lbs', features: 'Air Ride' },
-  { name: 'Kenworth T680', type: 'Semi-Trailer', size: '53 ft', capacity: '45,500 lbs', features: 'Liftgate' },
-];
+import { AddTruckModal } from '../../AddTruckModal/ui/AddTruckModal';
+import { trucksApi, type Truck as TruckData } from '../../../shared/api/trucks';
+import { ConfirmationModal } from '../../../shared/ui/ConfirmationModal/ConfirmationModal';
+import { toastStore } from '../../../shared/lib/toast/toastStore';
 
 export const FleetManagement = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [trucks, setTrucks] = useState<TruckData[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [truckToDelete, setTruckToDelete] = useState<number | null>(null);
+  const fetchTrucks = async () => {
+    try {
+      setIsLoading(true);
+      const response = await trucksApi.getTrucks();
+      setTrucks(response.trucks || []); 
+      setError(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to fetch trucks');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  useEffect(() => {
+    fetchTrucks();
+  }, []);
+
+  const openDeleteModal = (id: number) => {
+    setTruckToDelete(id);
+    setIsDeleteModalOpen(true);
+  };
+
+  const closeDeleteModal = () => {
+    setTruckToDelete(null);
+    setIsDeleteModalOpen(false);
+  };
+  
+
+  const handleConfirmDelete = async () => {
+    if (!truckToDelete) return;
+    try {
+      await trucksApi.deleteTruck(truckToDelete);
+      setTrucks(prevTrucks => prevTrucks.filter(t => t.id !== truckToDelete));
+      toastStore.show('Truck deleted successfully!', 'success');
+    } catch (err) {
+      toastStore.show('Failed to delete truck.', 'error');
+    } finally {
+      closeDeleteModal();
+    }
+  };
+  const renderContent = () => {
+    if (isLoading) {
+      return <p className="text-center text-gray-500 col-span-2">Loading trucks...</p>;
+    }
+    if (error) {
+      return <p className="text-center text-red-500 col-span-2">{error}</p>;
+    }
+    if (trucks.length === 0) {
+        return (
+          <div className="col-span-2 flex flex-col items-center justify-center py-10">
+            <Truck className="text-gray-400" size={48} />
+            <p className="mt-4 text-center text-gray-500">No trucks found. Click '+ Add Truck' to add your first one!</p>
+          </div>
+        );
+    }
+    return trucks.map((truck) => <TruckCard key={truck.id} truck={truck} onDelete={openDeleteModal} />);
+  };
 
   return (
     <>
@@ -35,14 +86,23 @@ export const FleetManagement = () => {
         
         <div className="flex-1 overflow-y-auto pb-6 hide-scrollbar">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {mockTrucks.map((truck, index) => (
-              <TruckCard key={index} truck={truck} />
-            ))}
+            {renderContent()}
           </div>
         </div>
       </div>
       
-      {isModalOpen && <AddTruckModal onClose={() => setIsModalOpen(false)} />}
+      {isModalOpen && <AddTruckModal onClose={() => setIsModalOpen(false)} onSuccess={fetchTrucks} />}
+
+
+      <ConfirmationModal
+        isOpen={isDeleteModalOpen}
+        onClose={closeDeleteModal}
+        onConfirm={handleConfirmDelete}
+        title="Delete Truck"
+        confirmText="Delete"
+      >
+        <p>Are you sure you want to delete this truck? This action cannot be undone.</p>
+      </ConfirmationModal>
     </>
   );
 };

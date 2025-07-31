@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Input } from '../../../../shared/ui/Input/Input';
 import { Button } from '../../../../shared/ui/Button/Button';
-import { Checkbox } from '../../../../shared/ui/Checkbox/Checkbox';
 import { authApi } from '../../../../shared/api/auth';
 import { authStore } from '../../../../shared/lib/auth/authStore';
 import { Eye, EyeOff } from 'lucide-react';
@@ -131,18 +130,6 @@ export const SignInForm = () => {
             {error}
           </div>
         )}
-
-        {/* Remember password */}
-        <div className="flex items-center">
-          <Checkbox
-            checked={formData.rememberPassword}
-            onChange={handleInputChange('rememberPassword')}
-            disabled={isLoading}
-          >
-            Remember Password
-          </Checkbox>
-        </div>
-
         {/* Submit */}
         <Button
           type="submit"
