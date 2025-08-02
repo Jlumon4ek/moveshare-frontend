@@ -13,6 +13,7 @@ import { PaymentSettings } from '../../widgets/PaymentSettings/ui/PaymentSetting
 import { NotificationSettings } from '../../widgets/NotificationSettings/ui/NotificationSettings';
 import { SecuritySettings } from '../../widgets/SecuritySettings/ui/SecuritySettings';
 import { MyJobsPage } from '../../pages/MyJobsPage/MyJobsPage';
+import { AvailableJobsPage } from '../../pages/AvailableJobsPage/AvailableJobsPage';
 
 
 export const AppRouter = () => {
@@ -63,6 +64,7 @@ export const AppRouter = () => {
           <Route index element={<Navigate to="/dashboard" replace />} />
           <Route path="dashboard" element={<DashboardPage />} />
           <Route path="my-jobs" element={<MyJobsPage />} />
+          <Route path="available-jobs" element={<AvailableJobsPage />} />
           
           <Route path="profile" element={<ProfilePage />}>
             <Route index element={<Navigate to="company" replace />} />
