@@ -14,6 +14,9 @@ import { NotificationSettings } from '../../widgets/NotificationSettings/ui/Noti
 import { SecuritySettings } from '../../widgets/SecuritySettings/ui/SecuritySettings';
 import { MyJobsPage } from '../../pages/MyJobsPage/MyJobsPage';
 import { AvailableJobsPage } from '../../pages/AvailableJobsPage/AvailableJobsPage';
+import { ChatsPage } from '../../pages/ChatsPage/ChatsPage';
+import { WelcomePage } from '../../pages/WelcomePage/WelcomePage';
+import { ClaimedJobsPage } from '../../pages/ClaimedJobsPage/ClaimedJobsPage';
 
 
 export const AppRouter = () => {
@@ -62,10 +65,13 @@ export const AppRouter = () => {
           }
         >
           <Route index element={<Navigate to="/dashboard" replace />} />
+          <Route path="welcome" element={<WelcomePage />} /> {/* <--- ДОБАВЬТЕ ЭТОТ МАРШРУТ */}
           <Route path="dashboard" element={<DashboardPage />} />
           <Route path="my-jobs" element={<MyJobsPage />} />
           <Route path="available-jobs" element={<AvailableJobsPage />} />
-          
+          <Route path="chats" element={<ChatsPage />} /> 
+          <Route path="claimed-jobs" element={<ClaimedJobsPage />} /> 
+
           <Route path="profile" element={<ProfilePage />}>
             <Route index element={<Navigate to="company" replace />} />
             <Route path="fleet" element={<FleetManagement />} />

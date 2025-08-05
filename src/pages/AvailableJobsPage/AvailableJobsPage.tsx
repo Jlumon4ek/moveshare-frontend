@@ -1,42 +1,95 @@
+import { useState, useEffect } from 'react';
 import { JobCard } from '../../entities/Job/ui/JobCard';
 import { JobFilters } from '../../features/job/filters/ui/JobFilters';
-import type { Job } from '../../shared/api/jobs';
+import { jobsApi, type Job } from '../../shared/api/jobs';
+import { Pagination } from '../../shared/ui/Pagination/Pagination';
+import { ClaimJobModal } from '../../features/claim-job/ui/ClaimjobModal';
 
-const mockJob: Job & { distance: number; isHotDeal?: boolean; isNew?: boolean; } = {
-  id: 1,
-  job_title: '2 Bedroom Delivery',
-  distance: 125,
-  isHotDeal: true,
-  isNew: true,
-  pickup_location: 'Chicago, IL',
-  delivery_location: 'Indianapolis, IN',
-  pickup_date: '2023-08-12T00:00:00.000Z',
-  delivery_date: '2023-08-14T00:00:00.000Z',
-  truck_size: 'Medium',
-  weight_lb: 4200,
-  volume_cu_ft: 1200,
-  payout_amount: 1850,
-  description: '',
-  cargo_type: '',
-  urgency: '',
-  pickup_time_window: '',
-  delivery_time_window: '',
-  loading_assistance: false,
-  early_delivery_bonus: 0,
-  payment_terms: '',
-  liftgate: false,
-  fragile_items: false,
-  climate_control: false,
-  assembly_required: false,
-  extra_insurance: false,
-  additional_packing: false,
-  status: 'active',
-  distance_miles: 125,
+type JobCardType = Job & {
+  distance: number;
+  isHotDeal?: boolean;
+  isNew?: boolean;
 };
 
-const mockJob2 = { ...mockJob, id: 2, isNew: false, payout_amount: 2100 };
+const ITEMS_PER_PAGE = 12;
 
 export const AvailableJobsPage = () => {
+  const [jobs, setJobs] = useState<JobCardType[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalJobs, setTotalJobs] = useState(0);
+
+  const [isClaimModalOpen, setIsClaimModalOpen] = useState(false);
+  const [selectedJob, setSelectedJob] = useState<Job | null>(null);
+
+  useEffect(() => {
+    const fetchJobs = async () => {
+      try {
+        setIsLoading(true);
+        const params = {
+            limit: ITEMS_PER_PAGE,
+            offset: (currentPage - 1) * ITEMS_PER_PAGE,
+        }
+        const response = await jobsApi.getAvailableJobs(params);
+
+        const jobsWithExtras = response.jobs.map((job, index) => ({
+          ...job,
+          distance: job.distance_miles,
+          isHotDeal: index % 3 === 0,
+          isNew: index < 2 && currentPage === 1,
+        }));
+        
+        setJobs(jobsWithExtras);
+        setTotalJobs(response.total);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to fetch jobs');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchJobs();
+  }, [currentPage]);
+
+  const handlePageChange = (page: number) => {
+      setCurrentPage(page);
+      window.scrollTo(0, 0);
+  }
+
+  const handleClaimJobClick = (job: Job) => {
+    setSelectedJob(job);
+    setIsClaimModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsClaimModalOpen(false);
+    setSelectedJob(null);
+  };
+
+  const renderContent = () => {
+    if (isLoading) {
+      return <div className="text-center text-gray-500 py-20">Loading jobs...</div>;
+    }
+
+    if (error) {
+      return <div className="text-center text-red-500 py-20">{error}</div>;
+    }
+
+    if (jobs.length === 0) {
+      return <div className="text-center text-gray-500 py-20">No available jobs found.</div>;
+    }
+
+    return (
+      <div className="grid grid-cols-1 xl:grid-cols-2 2xl:grid-cols-3 gap-6">
+        {jobs.map(job => (
+          <JobCard key={job.id} job={job} onClaimClick={handleClaimJobClick} />
+        ))}
+      </div>
+    );
+  };
+  
   return (
     <div className="h-full flex flex-col">
       <header className="flex-shrink-0 mb-6">
@@ -48,16 +101,29 @@ export const AvailableJobsPage = () => {
           <JobFilters />
         </div>
 
-        <div className="flex-1 overflow-y-auto hide-scrollbar">
-            <div className="grid grid-cols-1 xl:grid-cols-2 2xl:grid-cols-3 gap-6">
-                <JobCard job={mockJob} />
-                <JobCard job={mockJob2} />
-                <JobCard job={mockJob2} />
-                <JobCard job={mockJob2} />
-                <JobCard job={mockJob2} />
-            </div>
+        <div className="flex-1 flex flex-col overflow-y-auto hide-scrollbar">
+          <div className="flex-grow">
+            {renderContent()}
+          </div>
+          {!isLoading && totalJobs > ITEMS_PER_PAGE && (
+              <div className="mt-6 flex-shrink-0">
+                  <Pagination 
+                    currentPage={currentPage}
+                    totalItems={totalJobs}
+                    itemsPerPage={ITEMS_PER_PAGE}
+                    onPageChange={handlePageChange}
+                  />
+              </div>
+          )}
         </div>
       </div>
+      
+      {isClaimModalOpen && selectedJob && (
+        <ClaimJobModal
+          job={selectedJob}
+          onClose={handleCloseModal}
+        />
+      )}
     </div>
   );
 };

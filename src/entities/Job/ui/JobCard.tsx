@@ -1,3 +1,4 @@
+// src/entities/Job/ui/JobCard.tsx
 import { ArrowRight, Calendar, Weight, Truck, Maximize } from 'lucide-react';
 import type { Job } from '../../../shared/api/jobs';
 import { Button } from '../../../shared/ui/Button/Button';
@@ -9,8 +10,8 @@ interface JobCardProps {
     distance: number;
     isHotDeal?: boolean;
     isNew?: boolean;
-    
   };
+  onClaimClick: (job: Job) => void;
 }
 
 const DetailItem = ({ icon: Icon, label, value }: { icon: React.ElementType, label: string, value: string }) => (
@@ -24,7 +25,7 @@ const DetailItem = ({ icon: Icon, label, value }: { icon: React.ElementType, lab
 );
 
 
-export const JobCard = ({ job }: JobCardProps) => {
+export const JobCard = ({ job, onClaimClick }: JobCardProps) => {
   const formattedDates = `${new Date(job.pickup_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${new Date(job.delivery_date).toLocaleDateString('en-US', { day: 'numeric', year: 'numeric' })}`;
 
   return (
@@ -81,7 +82,7 @@ export const JobCard = ({ job }: JobCardProps) => {
         <span className="text-xl font-bold text-gray-900">${job.payout_amount.toLocaleString()}</span>
         <div className="flex gap-2">
           <Button variant="outline" size="sm">View Details</Button>
-          <Button variant="primary" size="sm">Claim Job</Button>
+          <Button variant="primary" size="sm" onClick={() => onClaimClick(job)}>Claim Job</Button>
         </div>
       </div>
     </div>
