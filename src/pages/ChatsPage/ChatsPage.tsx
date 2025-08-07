@@ -1,49 +1,43 @@
 // src/pages/ChatsPage/ChatsPage.tsx
-import { useState } from 'react';
-import { ChatList, type Chat } from '../../widgets/ChatList/ui/ChatList';
+import { useState, useEffect } from 'react';
+import { ChatList } from '../../widgets/ChatList/ui/ChatList';
 import { ChatWindow } from '../../widgets/ChatWindow/ui/ChatWindow';
+import { chatsApi, type Chat } from '../../shared/api/chats';
 
-// Моковые данные для списка чатов
-const mockChats: Chat[] = [
-  {
-    id: 1,
-    name: 'NorthStar Movers',
-    lastMessage: 'Do you have the bill of lading read...',
-    time: '10:30AM',
-    avatar: '', // Заглушка для аватара
-    unreadCount: 0,
-  },
-  {
-    id: 2,
-    name: 'Peak Movers',
-    lastMessage: 'Can we reschedule for Friday inste...',
-    time: 'Yesterday',
-    avatar: '',
-    unreadCount: 0,
-  },
-  {
-    id: 3,
-    name: 'Peak Movers',
-    lastMessage: 'Can we reschedule for Friday?',
-    time: 'Jul 28',
-    avatar: '',
-    unreadCount: 2,
-  },
-];
-
-// Моковые данные пользователя для хедера
 const user = {
     name: 'Tolebi Baitassov',
     role: 'Carrier'
 };
 
 export const ChatsPage = () => {
-  const [activeChatId, setActiveChatId] = useState(1);
-  const activeChat = mockChats.find(c => c.id === activeChatId);
+  const [chats, setChats] = useState<Chat[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [activeChatId, setActiveChatId] = useState<number | null>(null);
+
+  useEffect(() => {
+    const fetchChats = async () => {
+      try {
+        setIsLoading(true);
+        const response = await chatsApi.getChats(20, 0);
+        setChats(response.chats);
+        if (response.chats.length > 0) {
+          setActiveChatId(response.chats[0].id);
+        }
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to fetch chats');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchChats();
+  }, []);
+
+  const activeChat = chats.find(c => c.id === activeChatId);
 
   return (
     <div className="h-full flex flex-col">
-        {/* --- НАЧАЛО НОВОГО БЛОКА --- */}
         <header className="flex justify-between items-center flex-shrink-0">
             <h1 className="text-3xl font-bold text-gray-800">Chats</h1>
             <div className="flex items-center gap-3 text-right">
@@ -56,22 +50,25 @@ export const ChatsPage = () => {
         </header>
 
         <hr className="my-4 border-gray-200 flex-shrink-0" />
-        {/* --- КОНЕЦ НОВОГО БЛОКА --- */}
 
         {/* Основной контент */}
         <div className="flex-1 flex flex-row gap-6 overflow-hidden">
             {/* Левая колонка (список чатов) */}
             <div className="w-full max-w-sm flex-shrink-0 lg:flex flex-col hidden">
-                <ChatList
-                chats={mockChats}
-                activeChatId={activeChatId}
-                onSelectChat={setActiveChatId}
-                />
+                {isLoading && <p>Loading chats...</p>}
+                {error && <p className="text-red-500">{error}</p>}
+                {!isLoading && !error && (
+                    <ChatList
+                        chats={chats}
+                        activeChatId={activeChatId}
+                        onSelectChat={setActiveChatId}
+                    />
+                )}
             </div>
             
             {/* Правая колонка (окно чата) */}
             <div className="flex-1 bg-white rounded-2xl shadow-sm flex flex-col">
-                {activeChat ? <ChatWindow /> : 
+                {activeChat ? <ChatWindow chat={activeChat} /> : 
                 <div className="p-8 text-center text-gray-500 flex items-center justify-center h-full">
                     Выберите чат, чтобы начать общение
                 </div>

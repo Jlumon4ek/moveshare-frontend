@@ -2,23 +2,15 @@
 import { Search } from 'lucide-react';
 import { Input } from '../../../shared/ui/Input/Input';
 import { ChatItem } from '../../../entities/ChatItem/ui/ChatItem';
-
-export interface Chat {
-  id: number;
-  name: string;
-  lastMessage: string;
-  time: string;
-  avatar: string;
-  unreadCount: number;
-}
+import type { Chat } from '../../../shared/api/chats'; 
 
 interface ChatListProps {
   chats: Chat[];
-  activeChatId: number;
+  activeChatId: number | null;
   onSelectChat: (id: number) => void;
 }
 
-export const ChatList = ({ chats, activeChatId, onSelectChat = () => {} }: ChatListProps) => {
+export const ChatList = ({ chats, activeChatId, onSelectChat }: ChatListProps) => {
   return (
     <div className="bg-white rounded-2xl shadow-sm h-full flex flex-col p-5">
       <div className="relative mb-4">
@@ -30,10 +22,10 @@ export const ChatList = ({ chats, activeChatId, onSelectChat = () => {} }: ChatL
             {chats.map(chat => (
                 <ChatItem 
                     key={chat.id}
-                    name={chat.name}
-                    lastMessage={chat.lastMessage}
-                    time={chat.time}
-                    unreadCount={chat.unreadCount}
+                    name={chat.other_user_name}
+                    lastMessage={chat.last_message}
+                    time={new Date(chat.last_message_time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                    unreadCount={chat.unread_count}
                     isActive={chat.id === activeChatId}
                     onClick={() => onSelectChat(chat.id)}
                 />
@@ -43,3 +35,4 @@ export const ChatList = ({ chats, activeChatId, onSelectChat = () => {} }: ChatL
     </div>
   );
 };
+

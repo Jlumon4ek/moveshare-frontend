@@ -1,14 +1,15 @@
+// src/entities/Message/ui/MessageBubble.tsx
 import cn from 'classnames';
 import { MoreVertical } from 'lucide-react';
 
-export interface Message {
-    id: number;
+// Интерфейс теперь не экспортируется, так как он используется только здесь
+interface MessageProps {
     text: string;
     time: string;
     isOwnMessage: boolean;
 }
 
-export const MessageBubble = ({ text, time, isOwnMessage }: Message) => {
+export const MessageBubble = ({ text, time, isOwnMessage }: MessageProps) => {
     return (
         <div className={cn('flex items-end gap-2', { 'justify-end': isOwnMessage })}>
             {!isOwnMessage && <div className="w-8 h-8 rounded-full bg-gray-300 flex-shrink-0"/>}
