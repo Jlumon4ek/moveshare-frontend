@@ -4,7 +4,7 @@ import { Checkbox } from '../../../../shared/ui/Checkbox/Checkbox';
 import { Input } from '../../../../shared/ui/Input/Input';
 import { Select } from '../../../../shared/ui/Select/Select';
 import { Slider } from '../../../../shared/ui/Slider/Slider';
-import { Calendar } from 'lucide-react';
+import type { AvailableJobsParams } from '../../../../shared/api/jobs';
 
 const SectionLabel = ({ children }: { children: React.ReactNode }) => (
     <label className="block text-sm font-bold text-gray-800 mb-2">{children}</label>
@@ -20,13 +20,54 @@ const bedroomOptions = [
     { value: "office", label: "Office" }
 ];
 
-export const JobFilters = () => {
-    const [distance, setDistance] = useState(250);
+interface JobFiltersProps {
+    onFiltersChange: (filters: AvailableJobsParams) => void;
+}
+
+export const JobFilters = ({ onFiltersChange }: JobFiltersProps) => {
     const [selectedBedrooms, setSelectedBedrooms] = useState<string>('');
+    const [origin, setOrigin] = useState<string>('');
+    const [destination, setDestination] = useState<string>('');
+    const [distance, setDistance] = useState(500);
+    const [dateStart, setDateStart] = useState<string>('');
+    const [dateEnd, setDateEnd] = useState<string>('');
+    const [truckSizes, setTruckSizes] = useState<string[]>([]);
+    const [payoutMin, setPayoutMin] = useState<string>('');
+    const [payoutMax, setPayoutMax] = useState<string>('');
 
     const handleReset = () => {
         setSelectedBedrooms('');
-        setDistance(250);
+        setOrigin('');
+        setDestination('');
+        setDistance(500);
+        setDateStart('');
+        setDateEnd('');
+        setTruckSizes([]);
+        setPayoutMin('');
+        setPayoutMax('');
+        onFiltersChange({});
+    };
+
+    const handleTruckSizeChange = (size: string, checked: boolean) => {
+        setTruckSizes(prev => 
+            checked ? [...prev, size] : prev.filter(s => s !== size)
+        );
+    };
+
+    const handleApplyFilters = () => {
+        const filters: AvailableJobsParams = {};
+        
+        if (selectedBedrooms) filters.number_of_bedrooms = selectedBedrooms;
+        if (origin) filters.origin = origin;
+        if (destination) filters.destination = destination;
+        if (distance < 500) filters.max_distance = distance;
+        if (dateStart) filters.date_start = dateStart;
+        if (dateEnd) filters.date_end = dateEnd;
+        if (truckSizes.length > 0) filters.truck_size = truckSizes.join(',');
+        if (payoutMin) filters.payout_min = parseFloat(payoutMin);
+        if (payoutMax) filters.payout_max = parseFloat(payoutMax);
+
+        onFiltersChange(filters);
     };
 
     return (
@@ -51,16 +92,26 @@ export const JobFilters = () => {
                         onChange={(e) => setSelectedBedrooms(e.target.value)}
                         options={bedroomOptions}
                     />
-                    <Select 
-                        label="Origin"
-                        options={[{ value: "any", label: "City, State" }, { value: "chicago", label: "Chicago, IL" }]}
-                    />
-                    <Select 
-                        label="Destination"
-                        options={[{ value: "any", label: "City, State" }, { value: "indianapolis", label: "Indianapolis, IN" }]}
-                    />
+                    <div>
+                        <SectionLabel>Origin</SectionLabel>
+                        <Input 
+                            type="text" 
+                            placeholder="City, State" 
+                            value={origin}
+                            onChange={(e) => setOrigin(e.target.value)}
+                        />
+                    </div>
+                    <div>
+                        <SectionLabel>Destination</SectionLabel>
+                        <Input 
+                            type="text" 
+                            placeholder="City, State" 
+                            value={destination}
+                            onChange={(e) => setDestination(e.target.value)}
+                        />
+                    </div>
                     <Slider 
-                        label="Distance"
+                        label="Max Distance"
                         min="0"
                         max="500"
                         value={distance}
@@ -72,36 +123,75 @@ export const JobFilters = () => {
 
                     <div className="relative">
                        <SectionLabel>Date Start</SectionLabel>
-                       <Input type="text" placeholder="mm/dd/yyyy" />
-                       <Calendar className="absolute right-3 top-9 text-gray-400" size={18}/>
+                       <Input 
+                           type="date" 
+                           value={dateStart}
+                           onChange={(e) => setDateStart(e.target.value)}
+                       />
                     </div>
                      <div className="relative">
                        <SectionLabel>Date End</SectionLabel>
-                       <Input type="text" placeholder="mm/dd/yyyy" />
-                       <Calendar className="absolute right-3 top-9 text-gray-400" size={18}/>
+                       <Input 
+                           type="date" 
+                           value={dateEnd}
+                           onChange={(e) => setDateEnd(e.target.value)}
+                       />
                     </div>
 
                     <div>
                         <SectionLabel>Truck Size</SectionLabel>
                         <div className="space-y-2">
-                            <Checkbox>Small (≤26')</Checkbox>
-                            <Checkbox>Medium (27'-52')</Checkbox>
-                            <Checkbox>Large (≥53')</Checkbox>
+                            <Checkbox 
+                                checked={truckSizes.includes('Small')}
+                                onChange={(e) => handleTruckSizeChange('Small', e.target.checked)}
+                            >
+                                Small (≤26')
+                            </Checkbox>
+                            <Checkbox 
+                                checked={truckSizes.includes('Medium')}
+                                onChange={(e) => handleTruckSizeChange('Medium', e.target.checked)}
+                            >
+                                Medium (27'-52')
+                            </Checkbox>
+                            <Checkbox 
+                                checked={truckSizes.includes('Large')}
+                                onChange={(e) => handleTruckSizeChange('Large', e.target.checked)}
+                            >
+                                Large (≥53')
+                            </Checkbox>
                         </div>
                     </div>
 
                     <div>
                         <SectionLabel>Payout Range</SectionLabel>
                         <div className="flex gap-2">
-                            <Input type="number" placeholder="Min" />
-                            <Input type="number" placeholder="Max" />
+                            <Input 
+                                type="number" 
+                                placeholder="Min" 
+                                value={payoutMin}
+                                onChange={(e) => setPayoutMin(e.target.value)}
+                            />
+                            <Input 
+                                type="number" 
+                                placeholder="Max" 
+                                value={payoutMax}
+                                onChange={(e) => setPayoutMax(e.target.value)}
+                            />
                         </div>
                     </div>
                 </form>
             </div>
             
             <div className="pt-4 flex-shrink-0">
-                <Button type="submit" fullWidth size="md" className="py-2.5">Apply Filters</Button>
+                <Button 
+                    type="button" 
+                    fullWidth 
+                    size="md" 
+                    className="py-2.5"
+                    onClick={handleApplyFilters}
+                >
+                    Apply Filters
+                </Button>
             </div>
         </aside>
     );

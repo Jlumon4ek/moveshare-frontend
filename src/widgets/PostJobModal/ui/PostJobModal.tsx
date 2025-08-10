@@ -11,6 +11,7 @@ import { Select } from '../../../shared/ui/Select/Select';
 import { SelectCard } from '../../../shared/ui/SelectCard/SelectCard';
 import { Textarea } from '../../../shared/ui/Textarea/Textarea';
 import { Uploader } from '../../../shared/ui/Uploader/Uploader';
+import { GooglePlacesAutocomplete } from '../../../shared/ui/GooglePlacesAutocomplete/GooglePlacesAutocomplete';
 import { jobsApi } from '../../../shared/api/jobs';
 import { toastStore } from '../../../shared/lib/toast/toastStore';
 import cn from 'classnames';
@@ -287,7 +288,7 @@ export const PostJobModal = ({ isOpen, onClose }: PostJobModalProps) => {
 
   return (
     <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4" onClick={onClose}>
-        <div className="bg-white w-full max-w-6xl max-h-[90vh] flex flex-col rounded-2xl shadow-xl" onClick={(e) => e.stopPropagation()}>
+        <div className="bg-white w-full max-w-4xl max-h-[90vh] flex flex-col rounded-2xl shadow-xl" onClick={(e) => e.stopPropagation()}>
             <header className="bg-primary text-white p-5 flex justify-between items-center rounded-t-2xl flex-shrink-0">
                 <div className="flex items-center gap-3">
                     <Briefcase size={24} />
@@ -401,8 +402,17 @@ export const PostJobModal = ({ isOpen, onClose }: PostJobModalProps) => {
                         <Section title="Locations" icon={<MapPin size={24} className="text-primary"/>}>
                              <div className="space-y-4">
                                 <div>
-                                    <label className="block text-sm font-bold text-gray-800 mb-2">Pickup Location *</label>
-                                    <Input name="pickupLocation" value={formData.pickupLocation} onChange={handleInputChange} placeholder="Street address, city, state" required />
+                                    <GooglePlacesAutocomplete
+                                        label="Pickup Location *"
+                                        name="pickupLocation"
+                                        value={formData.pickupLocation}
+                                        onChange={handleInputChange}
+                                        placeholder="Street address, city, state"
+                                        required
+                                        onPlaceSelected={(place) => {
+                                            console.log('Pickup place selected:', place);
+                                        }}
+                                    />
                                 </div>
                                 <ToggleButtonGroup options={['House', 'Stairs', 'Elevator']} selectedValue={formData.pickupDetails} onChange={(val) => handleValueChange('pickupDetails', val)} />
                                 {formData.pickupDetails === 'Stairs' && (
@@ -421,8 +431,17 @@ export const PostJobModal = ({ isOpen, onClose }: PostJobModalProps) => {
                             </div>
                             <div className="space-y-4 pt-4">
                                 <div>
-                                    <label className="block text-sm font-bold text-gray-800 mb-2">Delivery Location *</label>
-                                    <Input name="deliveryLocation" value={formData.deliveryLocation} onChange={handleInputChange} placeholder="Street address, city, state" required />
+                                    <GooglePlacesAutocomplete
+                                        label="Delivery Location *"
+                                        name="deliveryLocation"
+                                        value={formData.deliveryLocation}
+                                        onChange={handleInputChange}
+                                        placeholder="Street address, city, state"
+                                        required
+                                        onPlaceSelected={(place) => {
+                                            console.log('Delivery place selected:', place);
+                                        }}
+                                    />
                                 </div>
                                 <ToggleButtonGroup options={['House', 'Stairs', 'Elevator']} selectedValue={formData.deliveryDetails} onChange={(val) => handleValueChange('deliveryDetails', val)} />
                                  {formData.deliveryDetails === 'Stairs' && (

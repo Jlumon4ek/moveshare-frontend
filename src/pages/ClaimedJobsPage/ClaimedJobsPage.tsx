@@ -3,29 +3,34 @@ import { useState, useEffect, useMemo } from 'react';
 import cn from 'classnames';
 import { ClaimedJobCard } from '../../widgets/ClaimedJobCard/ui/ClaimedJobCard';
 import { jobsApi, type Job } from '../../shared/api/jobs';
+import { Pagination } from '../../shared/ui/Pagination/Pagination';
 
 // Определяем возможные статусы
 type JobStatus = 'active' | 'in_progress' | 'completed' | 'disputed' | 'rejected' | 'cancelled';
 const TABS: JobStatus[] = ['active', 'in_progress', 'completed', 'disputed'];
 
-const user = {
-    name: 'Tolebi Baitassov',
-    role: 'Carrier'
-};
+const ITEMS_PER_PAGE = 10;
+
 
 export const ClaimedJobsPage = () => {
     const [activeTab, setActiveTab] = useState<JobStatus>('active');
     const [jobs, setJobs] = useState<Job[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalJobs, setTotalJobs] = useState(0);
 
     useEffect(() => {
         const fetchClaimedJobs = async () => {
             setIsLoading(true);
             setError(null);
             try {
-                const response = await jobsApi.getClaimedJobs({ page: 1, limit: 10 });
+                const response = await jobsApi.getClaimedJobs({ 
+                    page: currentPage, 
+                    limit: ITEMS_PER_PAGE 
+                });
                 setJobs(response.jobs || []);
+                setTotalJobs(response.pagination.total);
             } catch (err) {
                 setError(err instanceof Error ? err.message : 'Failed to fetch claimed jobs');
             } finally {
@@ -33,7 +38,7 @@ export const ClaimedJobsPage = () => {
             }
         };
         fetchClaimedJobs();
-    }, []);
+    }, [currentPage]);
 
     const filteredJobs = useMemo(() => {
         return jobs.filter(job => job.job_status.replace('_', ' ') === activeTab);
@@ -46,19 +51,23 @@ export const ClaimedJobsPage = () => {
         }, {} as Record<JobStatus, number>);
     }, [jobs]);
 
+    const handlePageChange = (page: number) => {
+        setCurrentPage(page);
+        window.scrollTo(0, 0);
+    };
+
+    const handleTabChange = (tab: JobStatus) => {
+        setActiveTab(tab);
+        setCurrentPage(1); // Reset to first page when switching tabs
+    };
+
 
     return (
         <div className="flex flex-col h-full">
             {/* Header */}
             <header className="flex justify-between items-center flex-shrink-0">
                 <h1 className="text-3xl font-bold text-gray-800">Claimed Jobs</h1>
-                <div className="flex items-center gap-3 text-right">
-                    <div>
-                        <p className="font-semibold text-gray-800">{user.name}</p>
-                        <p className="text-sm text-gray-500">{user.role}</p>
-                    </div>
-                    <div className="w-10 h-10 rounded-full bg-gray-200" />
-                </div>
+
             </header>
 
             {/* Tabs and Refresh Button Bar */}
@@ -67,7 +76,7 @@ export const ClaimedJobsPage = () => {
                     {TABS.map(tab => (
                         <button 
                             key={tab}
-                            onClick={() => setActiveTab(tab)}
+                            onClick={() => handleTabChange(tab)}
                             className={cn(
                                 "py-2 px-1 text-sm font-medium transition-colors -mb-px capitalize",
                                 {
@@ -84,8 +93,8 @@ export const ClaimedJobsPage = () => {
             </div>
 
             {/* Main Content */}
-            <div className="flex-1 overflow-y-auto pt-6">
-                <div className="space-y-6">
+            <div className="flex-1 overflow-y-auto pt-6 flex flex-col">
+                <div className="flex-grow space-y-6">
                     {isLoading && <p className="text-center text-gray-500 py-20">Loading claimed jobs...</p>}
                     {error && <p className="text-center text-red-500 py-20">{error}</p>}
                     {!isLoading && !error && (
@@ -98,6 +107,18 @@ export const ClaimedJobsPage = () => {
                         )
                     )}
                 </div>
+                
+                {/* Pagination */}
+                {!isLoading && totalJobs > ITEMS_PER_PAGE && (
+                    <div className="mt-6 flex-shrink-0">
+                        <Pagination 
+                            currentPage={currentPage}
+                            totalItems={totalJobs}
+                            itemsPerPage={ITEMS_PER_PAGE}
+                            onPageChange={handlePageChange}
+                        />
+                    </div>
+                )}
             </div>
         </div>
     );

@@ -21,6 +21,7 @@ export const AvailableJobsPage = () => {
   
   const [currentPage, setCurrentPage] = useState(1);
   const [totalJobs, setTotalJobs] = useState(0);
+  const [filters, setFilters] = useState<AvailableJobsParams>({});
 
   const [isClaimModalOpen, setIsClaimModalOpen] = useState(false);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false); // Состояние для модального окна деталей
@@ -32,8 +33,9 @@ export const AvailableJobsPage = () => {
       setError(null);
       try {
         const params: AvailableJobsParams = {
+            page: currentPage,
             limit: ITEMS_PER_PAGE,
-            offset: (currentPage - 1) * ITEMS_PER_PAGE,
+            ...filters,
         };
         const response = await jobsApi.getAvailableJobs(params);
         const receivedJobs = response.jobs || []; 
@@ -51,12 +53,17 @@ export const AvailableJobsPage = () => {
       }
     };
     fetchJobs();
-  }, [currentPage]);
+  }, [currentPage, filters]);
 
   const handlePageChange = (page: number) => {
       setCurrentPage(page);
       window.scrollTo(0, 0);
-  }
+  };
+
+  const handleFiltersChange = (newFilters: AvailableJobsParams) => {
+    setFilters(newFilters);
+    setCurrentPage(1); // Reset to first page when filters change
+  };
 
   const handleClaimJobClick = (job: Job) => {
     setSelectedJob(job);
@@ -100,7 +107,7 @@ export const AvailableJobsPage = () => {
       </header>
       
       <div className="flex-1 flex gap-6 overflow-hidden">
-        <div className="flex-shrink-0"> <JobFilters /> </div>
+        <div className="flex-shrink-0"> <JobFilters onFiltersChange={handleFiltersChange} /> </div>
         <div className="flex-1 flex flex-col overflow-y-auto hide-scrollbar">
           <div className="flex-grow"> {renderContent()} </div>
           {!isLoading && totalJobs > ITEMS_PER_PAGE && (
@@ -123,9 +130,9 @@ export const AvailableJobsPage = () => {
       {/* Рендерим новое модальное окно */}
       {isDetailsModalOpen && selectedJob && (
           <JobDetailsModal 
+            jobId={selectedJob.id}
             isOpen={isDetailsModalOpen}
             onClose={handleCloseModal}
-            job={selectedJob}
           />
       )}
     </div>

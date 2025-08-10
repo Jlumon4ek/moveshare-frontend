@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import cn from 'classnames';
+import { jobsApi } from '../../../shared/api/jobs'; // Update with correct path
 
-// --- Данные для графика "Monthly Earnings" ---
+// --- Данные для графика "Monthly Earnings" (keep hardcoded for now) ---
 const earningsData = [
   { name: 'Jan', earnings: 6500 },
   { name: 'Feb', earnings: 7200 },
@@ -12,17 +13,55 @@ const earningsData = [
   { name: 'Jun', earnings: 8400 },
 ];
 
-// --- Данные для графика "Job Status Distribution" ---
-const statusData = [
-  { name: 'Completed', value: 400 },
-  { name: 'In Progress', value: 150 },
-  { name: 'Scheduled', value: 300 },
-  { name: 'Available', value: 100 },
-];
-const COLORS = ['#84CC16', '#3B82F6', '#A855F7', '#F97316'];
+const COLORS = ['#84CC16', '#3B82F6', '#A855F7', '#F97316', '#EF4444'];
+
+interface JobStats {
+  active_jobs_count: number;
+  new_jobs_this_week: number;
+  status_distribution: Record<string, number>;
+}
+
+// Function to transform status distribution data for the pie chart
+const transformStatusData = (statusDistribution: Record<string, number>) => {
+  const statusLabels: Record<string, string> = {
+    'cancelled': 'Cancelled',
+    'completed': 'Completed',
+    'in_progress': 'In Progress',
+    'pending': 'Pending',
+    'rejected': 'Rejected'
+  };
+
+  return Object.entries(statusDistribution).map(([status, value]) => ({
+    name: statusLabels[status] || status,
+    value: value
+  }));
+};
 
 export const DashboardCharts = () => {
     const [timeRange, setTimeRange] = useState('Monthly');
+    const [jobStats, setJobStats] = useState<JobStats | null>(null);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+      const fetchStats = async () => {
+        try {
+          const stats = await jobsApi.getJobStats();
+          setJobStats(stats);
+        } catch (error) {
+          console.error('Error fetching job stats:', error);
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      fetchStats();
+    }, []);
+
+    const statusData = jobStats ? transformStatusData(jobStats.status_distribution) : [];
+
+    if (loading) {
+      return <div>Loading charts...</div>; // You can replace with a proper loading component
+    }
 
     return (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">

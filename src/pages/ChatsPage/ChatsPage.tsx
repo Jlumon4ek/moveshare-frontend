@@ -4,11 +4,6 @@ import { ChatList } from '../../widgets/ChatList/ui/ChatList';
 import { ChatWindow } from '../../widgets/ChatWindow/ui/ChatWindow';
 import { chatsApi, type Chat } from '../../shared/api/chats';
 
-const user = {
-    name: 'Tolebi Baitassov',
-    role: 'Carrier'
-};
-
 export const ChatsPage = () => {
   const [chats, setChats] = useState<Chat[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -45,13 +40,6 @@ export const ChatsPage = () => {
     <div className="h-full flex flex-col">
         <header className="flex justify-between items-center flex-shrink-0">
             <h1 className="text-3xl font-bold text-gray-800">Chats</h1>
-            <div className="flex items-center gap-3 text-right">
-                <div>
-                    <p className="font-semibold text-gray-800">{user.name}</p>
-                    <p className="text-sm text-gray-500">{user.role}</p>
-                </div>
-                <div className="w-10 h-10 rounded-full bg-gray-200" />
-            </div>
         </header>
 
         <hr className="my-4 border-gray-200 flex-shrink-0" />
