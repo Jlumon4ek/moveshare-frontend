@@ -1,3 +1,5 @@
+// src/widgets/MyJobsWidget/ui/MyJobsWidget.tsx
+
 import { useState, useEffect, useMemo } from 'react';
 import { jobsApi, type Job } from '../../../shared/api/jobs';
 import { Checkbox } from '../../../shared/ui/Checkbox/Checkbox';
@@ -19,7 +21,7 @@ export const MyJobsWidget = () => {
     const [jobs, setJobs] = useState<Job[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [activeTab, setActiveTab] = useState<Status>('canceled');
+    const [activeTab, setActiveTab] = useState<Status>('pending'); // Изменено на pending
     const [selectedJobs, setSelectedJobs] = useState<number[]>([]);
 
     useEffect(() => {
@@ -37,10 +39,10 @@ export const MyJobsWidget = () => {
         fetchJobs();
     }, []);
 
-    const filteredJobs = useMemo(() => jobs.filter(job => job.status === activeTab), [jobs, activeTab]);
+    const filteredJobs = useMemo(() => jobs.filter(job => job.job_status === activeTab), [jobs, activeTab]);
     const jobCounts = useMemo(() => {
         return TABS.reduce((acc, status) => {
-            acc[status] = jobs.filter(job => job.status === status).length;
+            acc[status] = jobs.filter(job => job.job_status === status).length;
             return acc;
         }, {} as Record<Status, number>);
     }, [jobs]);
@@ -103,13 +105,13 @@ export const MyJobsWidget = () => {
                             <tr key={job.id} className="border-b border-gray-200">
                                 <td className="p-3"><Checkbox checked={selectedJobs.includes(job.id)} onChange={() => handleSelectJob(job.id)} children={undefined} /></td>
                                 <td className="p-3 font-medium text-gray-800">#{job.id}</td>
-                                <td className="p-3 text-gray-600">{job.pickup_location} → {job.delivery_location}</td>
+                                <td className="p-3 text-gray-600">{job.pickup_address} → {job.delivery_address}</td>
                                 <td className="p-3 text-gray-600">{new Date(job.pickup_date).toLocaleDateString()} - {new Date(job.delivery_date).toLocaleDateString()}</td>
                                 <td className="p-3 text-gray-600 capitalize">{job.truck_size}</td>
-                                <td className="p-3 text-gray-600">${job.payout_amount.toLocaleString()}</td>
+                                <td className="p-3 text-gray-600">${job.payment_amount.toLocaleString()}</td>
                                 <td className="p-3">
-                                    <span className={`px-2 py-1 rounded-full text-xs font-semibold capitalize ${statusStyles[job.status]}`}>
-                                        {job.status}
+                                    <span className={`px-2 py-1 rounded-full text-xs font-semibold capitalize ${statusStyles[job.job_status]}`}>
+                                        {job.job_status}
                                     </span>
                                 </td>
                                 <td className="p-3"><button className="text-gray-400 hover:text-primary"><Eye size={18}/></button></td>

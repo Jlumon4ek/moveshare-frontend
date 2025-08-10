@@ -1,5 +1,8 @@
-import { useState, type ChangeEvent, type ReactNode, forwardRef } from 'react';
-import { X, Info, Truck, MapPin, Calendar, CreditCard, Upload, PlusCircle, Briefcase } from 'lucide-react';
+// src/widgets/PostJobModal/ui/PostJobModal.tsx
+
+// ... (импорты и другие компоненты без изменений)
+import { useState, type ChangeEvent, type ReactNode, forwardRef, type FormEvent, useEffect } from 'react';
+import { X, Info, Truck, MapPin, Calendar, CreditCard, PlusCircle, Briefcase, Box } from 'lucide-react';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { Button } from '../../../shared/ui/Button/Button';
@@ -7,6 +10,9 @@ import { Input } from '../../../shared/ui/Input/Input';
 import { Select } from '../../../shared/ui/Select/Select';
 import { SelectCard } from '../../../shared/ui/SelectCard/SelectCard';
 import { Textarea } from '../../../shared/ui/Textarea/Textarea';
+import { Uploader } from '../../../shared/ui/Uploader/Uploader';
+import { jobsApi } from '../../../shared/api/jobs';
+import { toastStore } from '../../../shared/lib/toast/toastStore';
 import cn from 'classnames';
 
 interface PostJobModalProps {
@@ -59,25 +65,64 @@ const ToggleButtonGroup = ({
     </div>
 );
 
-// Custom Input for DatePicker with manual masking logic
-const CustomDateInput = forwardRef<HTMLInputElement, { value?: string; onClick?: () => void; onChange: (event: ChangeEvent<HTMLInputElement>) => void; placeholder?: string; }>(
-    ({ value, onClick, onChange, placeholder }, ref) => {
+const validateDate = (dateString: string, minDate?: Date | null): string => {
+    if (!/^\d{2}\/\d{2}\/\d{4}$/.test(dateString)) return '';
+    const parts = dateString.split('/');
+    const month = parseInt(parts[0], 10);
+    const day = parseInt(parts[1], 10);
+    const year = parseInt(parts[2], 10);
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    now.setHours(0, 0, 0, 0);
+    if (year < currentYear) return "Year cannot be in the past.";
+    if (month < 1 || month > 12) return "Month must be between 1 and 12.";
+    const daysInMonth = new Date(year, month, 0).getDate();
+    if (day < 1 || day > daysInMonth) return `Invalid day. Must be between 1 and ${daysInMonth}.`;
+    const inputDate = new Date(year, month - 1, day);
+    if (inputDate < now) return "Date cannot be in the past.";
+    if (minDate && inputDate < minDate) return "End date cannot be before start date.";
+    return '';
+};
+
+const CustomDateInput = forwardRef<HTMLInputElement, { 
+    value?: string; 
+    onClick?: () => void; 
+    onChange: (event: ChangeEvent<HTMLInputElement>) => void; 
+    placeholder?: string;
+    error?: string;
+    setError: (error: string) => void;
+    minDate?: Date | null;
+}>(
+    ({ value, onClick, onChange, placeholder, error, setError, minDate }, ref) => {
         const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
-            let val = e.target.value.replace(/\D/g, ''); // Remove all non-digit characters
-            if (val.length > 2) {
-                val = val.slice(0, 2) + '/' + val.slice(2);
-            }
-            if (val.length > 5) {
-                val = val.slice(0, 5) + '/' + val.slice(5, 9);
-            }
+            let val = e.target.value.replace(/\D/g, '');
+            if (val.length > 2) val = `${val.slice(0, 2)}/${val.slice(2)}`;
+            if (val.length > 5) val = `${val.slice(0, 5)}/${val.slice(5, 9)}`;
             e.target.value = val;
+            const validationError = validateDate(e.target.value, minDate);
+            setError(validationError);
             onChange(e);
         };
 
-        return <Input value={value} onClick={onClick} ref={ref} onChange={handleInputChange} placeholder={placeholder} />;
+        return <Input value={value} onClick={onClick} ref={ref} onChange={handleInputChange} placeholder={placeholder} error={error} />;
     }
 );
 CustomDateInput.displayName = 'CustomDateInput';
+
+const generateTimeOptions = (placeholder: string) => {
+    const options = [{ value: '', label: placeholder }];
+    for (let h = 0; h < 24; h++) {
+      for (let m = 0; m < 60; m += 30) {
+        const minute = String(m).padStart(2, '0');
+        const hour = String(h).padStart(2, '0');
+        const timeValue = `${hour}:${minute}`;
+        options.push({ value: timeValue, label: timeValue });
+      }
+    }
+    return options;
+};
+const timeOptionsFrom = generateTimeOptions('From');
+const timeOptionsTo = generateTimeOptions('To');
 
 
 export const PostJobModal = ({ isOpen, onClose }: PostJobModalProps) => {
@@ -91,6 +136,8 @@ export const PostJobModal = ({ isOpen, onClose }: PostJobModalProps) => {
         additionalServicesDescription: '',
         crewAssistants: '',
         truckSize: '',
+        weight: '',
+        volume: '',
         pickupLocation: '',
         pickupDetails: 'Stairs',
         pickupFloor: '',
@@ -99,14 +146,47 @@ export const PostJobModal = ({ isOpen, onClose }: PostJobModalProps) => {
         deliveryDetails: 'Elevator',
         deliveryFloor: '',
         deliveryWalkDistance: '50-100 ft',
-        pickupTimeWindow: '',
-        deliveryTimeWindow: '',
+        pickupTimeStart: '',
+        pickupTimeEnd: '',
+        deliveryTimeStart: '',
+        deliveryTimeEnd: '',
         cut: '',
         payment: '',
     });
-
+    
     const [pickupDate, setPickupDate] = useState<Date | null>(null);
     const [deliveryDate, setDeliveryDate] = useState<Date | null>(null);
+    const [inventoryFiles, setInventoryFiles] = useState<File[]>([]);
+    const [dateErrors, setDateErrors] = useState({ pickup: '', delivery: '' });
+    const [isSaving, setIsSaving] = useState(false);
+    const [isFormValid, setIsFormValid] = useState(false);
+
+    useEffect(() => {
+        const validateForm = () => {
+            const {
+                jobType, bedrooms, crewAssistants, truckSize, weight, volume,
+                pickupLocation, deliveryLocation, pickupTimeStart, pickupTimeEnd,
+                deliveryTimeStart, deliveryTimeEnd, cut, payment
+            } = formData;
+
+            const requiredFields = [
+                jobType, bedrooms, crewAssistants, truckSize, weight, volume,
+                pickupLocation, deliveryLocation, pickupTimeStart, pickupTimeEnd,
+                deliveryTimeStart, deliveryTimeEnd, cut, payment
+            ];
+
+            const isDataValid = 
+                requiredFields.every(field => field !== '') &&
+                pickupDate !== null &&
+                deliveryDate !== null &&
+                dateErrors.pickup === '' &&
+                dateErrors.delivery === '';
+
+            setIsFormValid(isDataValid);
+        };
+
+        validateForm();
+    }, [formData, pickupDate, deliveryDate, dateErrors]);
 
     const handleInputChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value, type } = e.target;
@@ -122,6 +202,60 @@ export const PostJobModal = ({ isOpen, onClose }: PostJobModalProps) => {
     const handleValueChange = (name: string, value: string) => {
         setFormData(prev => ({ ...prev, [name]: value }));
     }
+
+    const handleSubmit = async (e: FormEvent) => {
+        e.preventDefault();
+        if (!isFormValid) {
+            toastStore.show('Please fill in all required fields.', 'error');
+            return;
+        }
+        setIsSaving(true);
+
+        const formatDate = (date: Date | null) => date ? date.toISOString().split('T')[0] : '';
+
+        const payload = {
+            job_type: formData.jobType, // API ждет 'residential_move', не 'residential'
+            number_of_bedrooms: formData.bedrooms.replace(/\D/g, ''),
+            packing_boxes: formData.packingBoxes,
+            bulky_items: formData.bulkyItems,
+            inventory_list: formData.inventoryList,
+            hoisting: formData.hoisting,
+            additional_services_description: formData.additionalServicesDescription,
+            estimated_crew_assistants: formData.crewAssistants,
+            truck_size: formData.truckSize.split(' ')[0].toLowerCase(),
+            pickup_address: formData.pickupLocation,
+            pickup_floor: formData.pickupFloor ? Number(formData.pickupFloor) : null,
+            pickup_building_type: formData.pickupDetails.toLowerCase(),
+            pickup_walk_distance: formData.pickupWalkDistance,
+            delivery_address: formData.deliveryLocation,
+            delivery_floor: formData.deliveryFloor ? Number(formData.deliveryFloor) : null,
+            delivery_building_type: formData.deliveryDetails.toLowerCase(),
+            delivery_walk_distance: formData.deliveryWalkDistance,
+            distance_miles: 0,
+            pickup_date: formatDate(pickupDate),
+            pickup_time_from: formData.pickupTimeStart,
+            pickup_time_to: formData.pickupTimeEnd,
+            delivery_date: formatDate(deliveryDate),
+            delivery_time_from: formData.deliveryTimeStart,
+            delivery_time_to: formData.deliveryTimeEnd,
+            cut_amount: Number(formData.cut),
+            payment_amount: Number(formData.payment),
+            weight_lbs: Number(formData.weight),
+            volume_cu_ft: Number(formData.volume)
+        };
+
+        try {
+            await jobsApi.createJob(payload); // передаем JSON
+            toastStore.show('Job created successfully!', 'success');
+            onClose();
+        } catch (error) {
+            toastStore.show(error instanceof Error ? error.message : 'Failed to create job', 'error');
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
+
 
   if (!isOpen) {
     return null;
@@ -153,7 +287,7 @@ export const PostJobModal = ({ isOpen, onClose }: PostJobModalProps) => {
 
   return (
     <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4" onClick={onClose}>
-        <div className="bg-white w-full max-w-4xl max-h-[90vh] flex flex-col rounded-2xl shadow-xl" onClick={(e) => e.stopPropagation()}>
+        <div className="bg-white w-full max-w-6xl max-h-[90vh] flex flex-col rounded-2xl shadow-xl" onClick={(e) => e.stopPropagation()}>
             <header className="bg-primary text-white p-5 flex justify-between items-center rounded-t-2xl flex-shrink-0">
                 <div className="flex items-center gap-3">
                     <Briefcase size={24} />
@@ -164,13 +298,13 @@ export const PostJobModal = ({ isOpen, onClose }: PostJobModalProps) => {
                 </button>
             </header>
             
-            <form className="flex-1 overflow-y-auto p-8">
+            <form className="flex-1 overflow-y-auto p-8" onSubmit={handleSubmit}>
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-8 gap-y-10">
                     
                     {/* Left Column */}
                     <div className="space-y-8">
                         <Section title="Job Details" icon={<Info size={24} className="text-primary"/>}>
-                            <Select label="Job Type *" name="jobType" value={formData.jobType} onChange={handleInputChange} options={jobTypeOptions} required />
+                             <Select label="Job Type *" name="jobType" value={formData.jobType} onChange={handleInputChange} options={jobTypeOptions} required />
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-2">Number of Bedrooms *</label>
                                 <div className="grid grid-cols-2 gap-3">
@@ -215,14 +349,39 @@ export const PostJobModal = ({ isOpen, onClose }: PostJobModalProps) => {
                             
                             <div>
                                 <label className="block text-sm font-bold text-gray-800 mb-2">Images of Items / PDF of Inventory List</label>
-                                <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center text-gray-500 cursor-pointer hover:bg-gray-50">
-                                    <Upload size={24} className="mx-auto mb-2 text-primary"/>
-                                    <p className="font-semibold text-gray-600">Upload Document</p>
-                                    <p className="text-xs">Click to upload or drag & drop</p>
-                                </div>
+                                <Uploader 
+                                    files={inventoryFiles}
+                                    setFiles={setInventoryFiles}
+                                    title="Upload Document"
+                                    description="Click to upload or drag & drop"
+                                    maxFiles={5}
+                                />
                             </div>
 
                              <Select label="Estimated Crew Assistants *" name="crewAssistants" value={formData.crewAssistants} onChange={handleInputChange} options={crewSizeOptions} required />
+                        </Section>
+                        
+                        <Section title="Cargo Details" icon={<Box size={24} className="text-primary"/>}>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <Input 
+                                    label="Weight (lbs) *"
+                                    name="weight"
+                                    type="number"
+                                    value={formData.weight}
+                                    onChange={handleInputChange}
+                                    placeholder="e.g., 4200"
+                                    required
+                                />
+                                <Input 
+                                    label="Volume (cu ft) *"
+                                    name="volume"
+                                    type="number"
+                                    value={formData.volume}
+                                    onChange={handleInputChange}
+                                    placeholder="e.g., 1200"
+                                    required
+                                />
+                            </div>
                         </Section>
                     </div>
 
@@ -240,23 +399,26 @@ export const PostJobModal = ({ isOpen, onClose }: PostJobModalProps) => {
                         </Section>
 
                         <Section title="Locations" icon={<MapPin size={24} className="text-primary"/>}>
-                            {/* Pickup Location Section */}
-                            <div className="space-y-4">
+                             <div className="space-y-4">
                                 <div>
                                     <label className="block text-sm font-bold text-gray-800 mb-2">Pickup Location *</label>
                                     <Input name="pickupLocation" value={formData.pickupLocation} onChange={handleInputChange} placeholder="Street address, city, state" required />
                                 </div>
                                 <ToggleButtonGroup options={['House', 'Stairs', 'Elevator']} selectedValue={formData.pickupDetails} onChange={(val) => handleValueChange('pickupDetails', val)} />
                                 {formData.pickupDetails === 'Stairs' && (
-                                    <Select label="Floor" name="pickupFloor" value={formData.pickupFloor} onChange={handleInputChange} options={[{value: '', label: 'Floor'}, {value: '1', label: '1st Floor'}]} />
+                                    <Input 
+                                        label="Floor"
+                                        name="pickupFloor"
+                                        value={formData.pickupFloor}
+                                        onChange={handleInputChange}
+                                        placeholder="Enter floor number"
+                                    />
                                 )}
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-2">Estimated Walk Distance</label>
                                     <ToggleButtonGroup options={['< 50 ft', '50-100 ft', '100-200 ft', '> 200 ft']} selectedValue={formData.pickupWalkDistance} onChange={(val) => handleValueChange('pickupWalkDistance', val)} columns={2} />
                                 </div>
                             </div>
-
-                            {/* Delivery Location Section */}
                             <div className="space-y-4 pt-4">
                                 <div>
                                     <label className="block text-sm font-bold text-gray-800 mb-2">Delivery Location *</label>
@@ -264,7 +426,13 @@ export const PostJobModal = ({ isOpen, onClose }: PostJobModalProps) => {
                                 </div>
                                 <ToggleButtonGroup options={['House', 'Stairs', 'Elevator']} selectedValue={formData.deliveryDetails} onChange={(val) => handleValueChange('deliveryDetails', val)} />
                                  {formData.deliveryDetails === 'Stairs' && (
-                                     <Select label="Floor" name="deliveryFloor" value={formData.deliveryFloor} onChange={handleInputChange} options={[{value: '', label: 'Floor'}, {value: '1', label: '1st Floor'}]} />
+                                     <Input
+                                        label="Floor"
+                                        name="deliveryFloor"
+                                        value={formData.deliveryFloor}
+                                        onChange={handleInputChange}
+                                        placeholder="Enter floor number"
+                                    />
                                  )}
                                  <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-2">Estimated Walk Distance</label>
@@ -274,8 +442,8 @@ export const PostJobModal = ({ isOpen, onClose }: PostJobModalProps) => {
                         </Section>
 
                         <Section title="Schedule" icon={<Calendar size={24} className="text-primary"/>}>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div className="relative">
+                             <div className="grid grid-cols-1 md:grid-cols-5 gap-4 items-start">
+                                <div className="relative md:col-span-2">
                                     <label className="block text-sm font-medium text-gray-700 mb-2">Pickup Date *</label>
                                     <DatePicker
                                         selected={pickupDate}
@@ -283,13 +451,27 @@ export const PostJobModal = ({ isOpen, onClose }: PostJobModalProps) => {
                                         minDate={new Date()}
                                         dateFormat="MM/dd/yyyy"
                                         placeholderText="mm/dd/yyyy"
-                                        customInput={<CustomDateInput onChange={() => {}} />}
+                                        customInput={
+                                            <CustomDateInput 
+                                                onChange={() => {}} 
+                                                error={dateErrors.pickup}
+                                                setError={(error) => setDateErrors(prev => ({ ...prev, pickup: error }))}
+                                            />
+                                        }
                                         required
                                     />
                                     <Calendar className="absolute right-3 top-10 text-gray-400 pointer-events-none" size={18}/>
                                 </div>
-                                <Select label="Pickup Time Window *" name="pickupTimeWindow" value={formData.pickupTimeWindow} onChange={handleInputChange} options={[{value: '', label: 'Select time window'}]} required />
-                                <div className="relative">
+                                <div className="md:col-span-3">
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">Pickup Time Window *</label>
+                                    <div className="grid grid-cols-2 gap-2">
+                                        <Select name="pickupTimeStart" value={formData.pickupTimeStart} onChange={handleInputChange} options={timeOptionsFrom} required />
+                                        <Select name="pickupTimeEnd" value={formData.pickupTimeEnd} onChange={handleInputChange} options={timeOptionsTo} required />
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-5 gap-4 items-start">
+                                 <div className="relative md:col-span-2">
                                      <label className="block text-sm font-medium text-gray-700 mb-2">Delivery Date *</label>
                                      <DatePicker
                                         selected={deliveryDate}
@@ -297,13 +479,26 @@ export const PostJobModal = ({ isOpen, onClose }: PostJobModalProps) => {
                                         minDate={pickupDate || new Date()}
                                         dateFormat="MM/dd/yyyy"
                                         placeholderText="mm/dd/yyyy"
-                                        customInput={<CustomDateInput onChange={() => {}} />}
+                                        customInput={
+                                            <CustomDateInput 
+                                                onChange={() => {}} 
+                                                error={dateErrors.delivery}
+                                                setError={(error) => setDateErrors(prev => ({ ...prev, delivery: error }))}
+                                                minDate={pickupDate}
+                                            />
+                                        }
                                         required
                                         disabled={!pickupDate}
                                     />
                                     <Calendar className="absolute right-3 top-10 text-gray-400 pointer-events-none" size={18}/>
                                 </div>
-                                <Select label="Delivery Time Window *" name="deliveryTimeWindow" value={formData.deliveryTimeWindow} onChange={handleInputChange} options={[{value: '', label: 'Select time window'}]} required />
+                                <div className="md:col-span-3">
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">Delivery Time Window *</label>
+                                    <div className="grid grid-cols-2 gap-2">
+                                        <Select name="deliveryTimeStart" value={formData.deliveryTimeStart} onChange={handleInputChange} options={timeOptionsFrom} required />
+                                        <Select name="deliveryTimeEnd" value={formData.deliveryTimeEnd} onChange={handleInputChange} options={timeOptionsTo} required />
+                                    </div>
+                                </div>
                             </div>
                         </Section>
 
@@ -323,13 +518,13 @@ export const PostJobModal = ({ isOpen, onClose }: PostJobModalProps) => {
                 </div>
             </form>
             <footer className="p-4 bg-gray-50 border-t border-gray-200 flex-shrink-0 flex justify-end gap-3 rounded-b-2xl">
-                <Button type="button" variant="outline" size="sm" onClick={onClose}>
+                <Button type="button" variant="outline" size="sm" onClick={onClose} disabled={isSaving}>
                     <X size={16} />
                     Cancel
                 </Button>
-                <Button type="submit" size="sm">
+                <Button type="submit" size="sm" onClick={handleSubmit} disabled={!isFormValid || isSaving}>
                     <PlusCircle size={16} />
-                    Create Job
+                    {isSaving ? 'Creating...' : 'Create Job'}
                 </Button>
             </footer>
         </div>

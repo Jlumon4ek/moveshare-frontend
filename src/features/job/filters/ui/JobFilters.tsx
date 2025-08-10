@@ -85,7 +85,7 @@ export const JobFilters = () => {
                         <SectionLabel>Truck Size</SectionLabel>
                         <div className="space-y-2">
                             <Checkbox>Small (≤26')</Checkbox>
-                            <Checkbox checked>Medium (27'-52')</Checkbox>
+                            <Checkbox>Medium (27'-52')</Checkbox>
                             <Checkbox>Large (≥53')</Checkbox>
                         </div>
                     </div>

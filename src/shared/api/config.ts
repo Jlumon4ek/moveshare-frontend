@@ -1,3 +1,5 @@
+// src/shared/api/config.ts
+
 import { authStore } from '../lib/auth/authStore';
 
 export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
@@ -36,7 +38,6 @@ export const apiRequest = async (
       },
     };
 
-    // Добавляем токен авторизации, если он есть
     if (accessToken) {
         config.headers = { ...config.headers, 'Authorization': `Bearer ${accessToken}` };
     }
@@ -47,16 +48,15 @@ export const apiRequest = async (
   try {
     let response = await originalRequest();
 
-    // --- ЛОВИМ ОШИБКУ ИСТЕКШЕГО ТОКЕНА ---
     if (response.status === 401) {
+      // ... (Refresh token logic remains the same)
       if (isRefreshing) {
-        // Если уже идет процесс обновления, добавляем запрос в очередь
         return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject });
         })
         .then(token => {
             options.headers = { ...options.headers, 'Authorization': `Bearer ${token}` };
-            return apiRequest(endpoint, options); // Повторяем запрос с новым токеном
+            return apiRequest(endpoint, options);
         });
       }
 
@@ -69,7 +69,6 @@ export const apiRequest = async (
       }
       
       try {
-        // --- ОТПРАВЛЯЕМ ЗАПРОС НА ОБНОВЛЕНИЕ ---
         const refreshResponse = await fetch(`${API_BASE_URL}/auth/refresh-token`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -77,16 +76,14 @@ export const apiRequest = async (
         });
 
         if (!refreshResponse.ok) {
-          // Если и refresh token истек, выходим из системы
           authStore.clearAuth();
           return Promise.reject(new Error("Session expired. Please log in again."));
         }
 
         const newTokens = await refreshResponse.json();
-        authStore.setTokens(newTokens); // Сохраняем новые токены
-        processQueue(null, newTokens.access_token); // Выполняем запросы из очереди
+        authStore.setTokens(newTokens);
+        processQueue(null, newTokens.access_token);
         
-        // Повторяем оригинальный запрос с новым токеном
         response = await originalRequest();
 
       } catch (e) {
@@ -100,6 +97,9 @@ export const apiRequest = async (
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({ message: `HTTP error! status: ${response.status}` }));
+      
+      console.error('Server error response:', errorData); 
+      
       throw new Error(errorData.message);
     }
 

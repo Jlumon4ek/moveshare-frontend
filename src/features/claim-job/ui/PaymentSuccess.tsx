@@ -20,10 +20,9 @@ export const PaymentSuccess = ({ job, onClose }: PaymentSuccessProps) => {
     try {
         const response = await chatsApi.createChat({
             job_id: job.id,
-            participant_id: job.user_id, 
+            participant_id: job.contractor_id, 
         });
         
-        // ИСПРАВЛЕНИЕ: Получаем ID напрямую из response.chat_id
         const newChatId = response.chat_id;
         
         navigate('/chats', { state: { openChatId: newChatId } });

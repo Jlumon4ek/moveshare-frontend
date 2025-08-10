@@ -1,3 +1,5 @@
+// src/features/claim-job/ui/ClaimjobModal.tsx
+
 import { useState } from 'react';
 import { ArrowRight, CreditCard, X } from 'lucide-react';
 import type { Job } from '../../../shared/api/jobs';
@@ -5,8 +7,8 @@ import { Button } from '../../../shared/ui/Button/Button';
 import { Checkbox } from '../../../shared/ui/Checkbox/Checkbox';
 import { Link } from 'react-router-dom';
 import { PaymentSuccess } from './PaymentSuccess';
-import { jobsApi } from '../../../shared/api/jobs'; // <-- ИМПОРТ API
-import { toastStore } from '../../../shared/lib/toast/toastStore'; // <-- ИМПОРТ TOAST
+import { jobsApi } from '../../../shared/api/jobs';
+import { toastStore } from '../../../shared/lib/toast/toastStore';
 
 interface ClaimJobModalProps {
   job: Job;
@@ -17,14 +19,11 @@ export const ClaimJobModal = ({ job, onClose }: ClaimJobModalProps) => {
   const claimFee = 30.00;
   const [isPaymentSuccessful, setIsPaymentSuccessful] = useState(false);
   const [isAgreed, setIsAgreed] = useState(false);
-  const [isProcessing, setIsProcessing] = useState(false); // <-- СОСТОЯНИЕ ЗАГРУЗКИ
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const handleConfirmPayment = async () => {
     setIsProcessing(true);
     try {
-      // Здесь в будущем будет логика реальной оплаты через Stripe.
-      // После успешной "оплаты" отправляем запрос на сервер.
-      
       const response = await jobsApi.claimJob(job.id);
       
       toastStore.show(response.message || 'Job claimed successfully!', 'success');
@@ -37,6 +36,9 @@ export const ClaimJobModal = ({ job, onClose }: ClaimJobModalProps) => {
       setIsProcessing(false);
     }
   };
+
+  // Динамически создаем заголовок, так как job_title отсутствует в API
+  const jobTitle = `${job.job_type.charAt(0).toUpperCase() + job.job_type.slice(1)} Move`;
 
   return (
     <div
@@ -54,7 +56,8 @@ export const ClaimJobModal = ({ job, onClose }: ClaimJobModalProps) => {
             {/* Header */}
             <div className="bg-primary text-white p-6 text-center relative">
               <h2 className="text-2xl font-bold">Claim Job</h2>
-              <p className="text-white/90">You will earn ${job.payout_amount.toLocaleString()}</p>
+              {/* ФИКС: Добавляем проверку на существование payment_amount */}
+              <p className="text-white/90">You will earn ${(job.payment_amount || 0).toLocaleString()}</p>
               <button onClick={onClose} className="absolute top-4 right-4 text-white/70 hover:text-white">
                   <X size={24} />
               </button>
@@ -64,8 +67,8 @@ export const ClaimJobModal = ({ job, onClose }: ClaimJobModalProps) => {
             <div className="p-6 space-y-6">
                 {/* Job Info */}
                 <div className="bg-primary/10 p-4 rounded-xl border border-primary/20">
-                    <p className="font-bold text-gray-800">For Job #{job.id}: {job.job_title}</p>
-                    <p className="text-sm text-gray-600">{job.description}</p>
+                    <p className="font-bold text-gray-800">For Job #{job.id}: {jobTitle}</p>
+                    <p className="text-sm text-gray-600">{job.additional_services_description || 'No description provided.'}</p>
                 </div>
                 
                 {/* Payment Details */}
@@ -90,7 +93,7 @@ export const ClaimJobModal = ({ job, onClose }: ClaimJobModalProps) => {
 
                 {/* Info Box */}
                 <div className="bg-gray-100 p-3 rounded-lg text-xs text-gray-600">
-                    MoveShare charges a ${claimFee.toFixed(2)} fixed fee per job to cover platform operating costs. You'll receive ${job.payout_amount.toLocaleString()} after completing this job.
+                    MoveShare charges a ${claimFee.toFixed(2)} fixed fee per job to cover platform operating costs. You'll receive ${(job.payment_amount || 0).toLocaleString()} after completing this job.
                 </div>
                 
                 {/* Agreement */}

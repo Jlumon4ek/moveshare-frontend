@@ -75,7 +75,7 @@ export const chatsApi = {
       throw new Error('Not authorized');
     }
 
-    return apiRequest(`/chats/?limit=${limit}&offset=${offset}`, {
+    return apiRequest(`/chats/`, {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${accessToken}`,

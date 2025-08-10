@@ -5,32 +5,42 @@ import { FolderUp, X } from 'lucide-react';
 interface UploaderProps {
     files: File[];
     setFiles: (files: File[]) => void;
+    title: string;
+    description: string;
+    maxFiles?: number;
 }
 
-export const Uploader = ({ files, setFiles }: UploaderProps) => {
+export const Uploader = ({ 
+    files, 
+    setFiles,
+    title,
+    description,
+    maxFiles = 3,
+}: UploaderProps) => {
   const onDrop = useCallback((acceptedFiles: File[]) => {
-    if (files.length + acceptedFiles.length > 3) {
-      alert("You can upload a maximum of 3 photos.");
+    if (files.length + acceptedFiles.length > maxFiles) {
+      alert(`You can upload a maximum of ${maxFiles} files.`);
       return;
     }
     setFiles([...files, ...acceptedFiles]);
-  }, [files, setFiles]);
+  }, [files, setFiles, maxFiles]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({ 
     onDrop, 
-    accept: { 'image/*': ['.jpeg', '.png', '.jpg'] },
-    maxFiles: 3,
+    accept: { 
+        'image/*': ['.jpeg', '.png', '.jpg'],
+        'application/pdf': ['.pdf']
+    },
+    maxFiles,
   });
 
   const removeFile = (fileToRemove: File) => {
     setFiles(files.filter(file => file !== fileToRemove));
   };
 
-  // Создаем URL для предпросмотра и очищаем память после использования
   useEffect(() => {
     const filePreviews = files.map(file => ({...file, preview: URL.createObjectURL(file)}));
     
-    // Очистка URL-ов для предотвращения утечек памяти
     return () => filePreviews.forEach(file => URL.revokeObjectURL(file.preview));
   }, [files]);
   
@@ -45,14 +55,9 @@ export const Uploader = ({ files, setFiles }: UploaderProps) => {
       >
         <input {...getInputProps()} />
         <div className="flex flex-col items-center justify-center gap-2">
-            <h3 className="text-lg font-semibold text-gray-800">Upload Truck Photos</h3>
-            <p className="text-gray-500 text-sm">Drag & drop images here or click to browse (up to 3 files)</p>
-            <div className="mt-4">
-                <button type="button" className="font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg px-4 py-2 flex items-center gap-2 shadow-sm hover:bg-gray-50">
-                    <FolderUp size={16} />
-                    Select Files
-                </button>
-            </div>
+            <FolderUp size={24} className="text-primary"/>
+            <h3 className="text-lg font-semibold text-gray-800">{title}</h3>
+            <p className="text-gray-500 text-sm">{description}</p>
         </div>
       </div>
 
@@ -66,7 +71,7 @@ export const Uploader = ({ files, setFiles }: UploaderProps) => {
                   src={URL.createObjectURL(file)} 
                   alt={file.name} 
                   className="w-full h-24 object-cover rounded-md"
-                  onLoad={(e) => URL.revokeObjectURL((e.target as HTMLImageElement).src)} // Очистка после загрузки
+                  onLoad={(e) => URL.revokeObjectURL((e.target as HTMLImageElement).src)}
                 />
                 <button 
                   onClick={() => removeFile(file)} 

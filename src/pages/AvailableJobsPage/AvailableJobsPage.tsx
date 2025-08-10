@@ -1,17 +1,18 @@
+// src/pages/AvailableJobsPage/AvailableJobsPage.tsx
 import { useState, useEffect } from 'react';
 import { JobCard } from '../../entities/Job/ui/JobCard';
 import { JobFilters } from '../../features/job/filters/ui/JobFilters';
 import { jobsApi, type Job, type AvailableJobsParams } from '../../shared/api/jobs';
 import { Pagination } from '../../shared/ui/Pagination/Pagination';
 import { ClaimJobModal } from '../../features/claim-job/ui/ClaimjobModal';
+import { JobDetailsModal } from '../../widgets/JobDetailsModal/ui/JobDetailsModal'; // Импортируем новый компонент
 
 type JobCardType = Job & {
-  distance: number;
   isHotDeal?: boolean;
   isNew?: boolean;
 };
 
-const ITEMS_PER_PAGE = 12; // Количество работ на одной странице
+const ITEMS_PER_PAGE = 12;
 
 export const AvailableJobsPage = () => {
   const [jobs, setJobs] = useState<JobCardType[]>([]);
@@ -22,6 +23,7 @@ export const AvailableJobsPage = () => {
   const [totalJobs, setTotalJobs] = useState(0);
 
   const [isClaimModalOpen, setIsClaimModalOpen] = useState(false);
+  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false); // Состояние для модального окна деталей
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
 
   useEffect(() => {
@@ -34,59 +36,58 @@ export const AvailableJobsPage = () => {
             offset: (currentPage - 1) * ITEMS_PER_PAGE,
         };
         const response = await jobsApi.getAvailableJobs(params);
-
-        // Добавляем доп. поля, как и раньше
-        const jobsWithExtras = response.jobs.map((job, index) => ({
+        const receivedJobs = response.jobs || []; 
+        const jobsWithExtras = receivedJobs.map((job, index) => ({
           ...job,
-          distance: job.distance_miles,
           isHotDeal: index % 3 === 0,
           isNew: index < 2 && currentPage === 1,
         }));
-        
         setJobs(jobsWithExtras);
-        setTotalJobs(response.total); // Сохраняем общее количество работ
+        setTotalJobs(response.pagination.total);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to fetch jobs');
       } finally {
         setIsLoading(false);
       }
     };
-
     fetchJobs();
-  }, [currentPage]); // Перезапускаем эффект при изменении currentPage
+  }, [currentPage]);
 
   const handlePageChange = (page: number) => {
       setCurrentPage(page);
-      window.scrollTo(0, 0); // Прокручиваем наверх при смене страницы
+      window.scrollTo(0, 0);
   }
 
   const handleClaimJobClick = (job: Job) => {
     setSelectedJob(job);
     setIsClaimModalOpen(true);
   };
+  
+  // Новый обработчик для открытия деталей
+  const handleViewDetailsClick = (job: Job) => {
+    setSelectedJob(job);
+    setIsDetailsModalOpen(true);
+  };
 
   const handleCloseModal = () => {
     setIsClaimModalOpen(false);
+    setIsDetailsModalOpen(false);
     setSelectedJob(null);
   };
 
   const renderContent = () => {
-    if (isLoading) {
-      return <div className="text-center text-gray-500 py-20">Loading jobs...</div>;
-    }
-
-    if (error) {
-      return <div className="text-center text-red-500 py-20">{error}</div>;
-    }
-
-    if (jobs.length === 0) {
-      return <div className="text-center text-gray-500 py-20">No available jobs found.</div>;
-    }
-
+    if (isLoading) return <div className="text-center text-gray-500 py-20">Loading jobs...</div>;
+    if (error) return <div className="text-center text-red-500 py-20">{error}</div>;
+    if (jobs.length === 0) return <div className="text-center text-gray-500 py-20">No available jobs found.</div>;
     return (
       <div className="grid grid-cols-1 xl:grid-cols-2 2xl:grid-cols-3 gap-6">
         {jobs.map(job => (
-          <JobCard key={job.id} job={job} onClaimClick={handleClaimJobClick} />
+          <JobCard 
+            key={job.id} 
+            job={job} 
+            onClaimClick={handleClaimJobClick}
+            onViewDetailsClick={handleViewDetailsClick} // Передаем новый обработчик
+          />
         ))}
       </div>
     );
@@ -99,16 +100,9 @@ export const AvailableJobsPage = () => {
       </header>
       
       <div className="flex-1 flex gap-6 overflow-hidden">
-        <div className="flex-shrink-0">
-          <JobFilters />
-        </div>
-
+        <div className="flex-shrink-0"> <JobFilters /> </div>
         <div className="flex-1 flex flex-col overflow-y-auto hide-scrollbar">
-          <div className="flex-grow">
-            {renderContent()}
-          </div>
-          
-          {/* Отображаем пагинацию, если работ больше, чем на одной странице */}
+          <div className="flex-grow"> {renderContent()} </div>
           {!isLoading && totalJobs > ITEMS_PER_PAGE && (
               <div className="mt-6 flex-shrink-0">
                   <Pagination 
@@ -123,10 +117,16 @@ export const AvailableJobsPage = () => {
       </div>
       
       {isClaimModalOpen && selectedJob && (
-        <ClaimJobModal
-          job={selectedJob}
-          onClose={handleCloseModal}
-        />
+        <ClaimJobModal job={selectedJob} onClose={handleCloseModal} />
+      )}
+
+      {/* Рендерим новое модальное окно */}
+      {isDetailsModalOpen && selectedJob && (
+          <JobDetailsModal 
+            isOpen={isDetailsModalOpen}
+            onClose={handleCloseModal}
+            job={selectedJob}
+          />
       )}
     </div>
   );
