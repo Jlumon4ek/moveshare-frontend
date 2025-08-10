@@ -16,3 +16,74 @@
   scrollbar-width: none;  /* Firefox */
 }
 
+
+
+/* ... ваши существующие стили ... */
+
+/* Custom Styles for React Datepicker */
+.react-datepicker {
+  border-radius: 0.75rem !important;
+  border: 1px solid #e5e7eb !important;
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1) !important;
+}
+
+.react-datepicker__header {
+  background-color: var(--color-primary) !important;
+  border-bottom: none !important;
+  border-top-left-radius: 0.75rem !important;
+  border-top-right-radius: 0.75rem !important;
+}
+
+.react-datepicker__current-month,
+.react-datepicker-time__header,
+.react-datepicker-year-read-view--down-arrow,
+.react-datepicker-month-read-view--down-arrow,
+.react-datepicker-month-year-read-view--down-arrow {
+  color: var(--color-white) !important;
+  font-weight: 600 !important;
+}
+
+.react-datepicker__day-name {
+  color: var(--color-white) !important;
+  font-weight: 500 !important;
+  opacity: 0.8;
+}
+
+.react-datepicker__navigation-icon::before {
+    border-color: var(--color-white) !important;
+    opacity: 0.8;
+}
+
+.react-datepicker__navigation:hover .react-datepicker__navigation-icon::before {
+    opacity: 1;
+}
+
+.react-datepicker__day--selected,
+.react-datepicker__day--in-selecting-range,
+.react-datepicker__day--in-range,
+.react-datepicker__month-text--selected,
+.react-datepicker__month-text--in-selecting-range,
+.react-datepicker__month-text--in-range,
+.react-datepicker__quarter-text--selected,
+.react-datepicker__quarter-text--in-selecting-range,
+.react-datepicker__quarter-text--in-range,
+.react-datepicker__year-text--selected,
+.react-datepicker__year-text--in-selecting-range,
+.react-datepicker__year-text--in-range {
+  background-color: var(--color-primary) !important;
+  color: var(--color-white) !important;
+  border-radius: 0.5rem !important;
+}
+
+.react-datepicker__day--keyboard-selected {
+    background-color: #dbeafe !important; /* light blue */
+    color: #1e40af !important; /* dark blue */
+}
+
+.react-datepicker__day:hover {
+    border-radius: 0.5rem !important;
+}
+
+.react-datepicker__triangle {
+    display: none !important;
+}

@@ -1,4 +1,3 @@
-// src/widgets/ChatWindow/ui/ChatWindow.tsx
 import { ChevronLeft, AlertTriangle, Loader2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { MessageBubble } from '../../../entities/Message/ui/MessageBubble';
@@ -48,7 +47,10 @@ export const ChatWindow = ({ chat }: ChatWindowProps) => {
         try {
             const response = await chatsApi.getChatMessages(chat.id, MESSAGE_LIMIT, currentOffset, { signal: abortSignal });
             if (abortSignal.aborted) return null;
-            const sortedMessages = response.messages.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+            
+            const newMessages = response.messages || [];
+            const sortedMessages = newMessages.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+            
             return { newMessages: sortedMessages, hasNext: response.pagination.has_next };
         } catch (err) {
             if (err instanceof Error && err.name !== 'AbortError') {
@@ -150,7 +152,7 @@ export const ChatWindow = ({ chat }: ChatWindowProps) => {
         return <InitialLoadingIndicator text="Loading chat..." />;
     }
     
-    if (error && messages.length === 0) {
+    if (error) {
         return <div className="flex items-center justify-center h-full text-red-500">{error}</div>;
     }
 
@@ -177,6 +179,11 @@ export const ChatWindow = ({ chat }: ChatWindowProps) => {
             </div>
 
             <div ref={messageContainerRef} onScroll={handleScroll} className="flex-1 overflow-y-auto p-6 space-y-4">
+                {messages.length === 0 && !isInitialLoad && (
+                    <div className="flex items-center justify-center h-full">
+                        <p className="text-gray-500">No messages in this chat yet. Say hello!</p>
+                    </div>
+                )}
                 {messages.map(msg => (
                     <MessageBubble 
                         key={msg.id} 

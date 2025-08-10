@@ -87,4 +87,19 @@ export const jobsApi = {
       },
     });
   },
+
+
+  claimJob: async (jobId: number): Promise<{ message: string }> => {
+    const { accessToken } = authStore.getState();
+    if (!accessToken) {
+        throw new Error('Not authorized');
+    }
+
+    return apiRequest(`/jobs/${jobId}/apply`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+      },
+    });
+  },
 };

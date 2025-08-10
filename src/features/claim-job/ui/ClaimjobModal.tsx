@@ -1,11 +1,12 @@
-// src/features/claim-job/ui/ClaimJobModal.tsx
 import { useState } from 'react';
 import { ArrowRight, CreditCard, X } from 'lucide-react';
 import type { Job } from '../../../shared/api/jobs';
 import { Button } from '../../../shared/ui/Button/Button';
 import { Checkbox } from '../../../shared/ui/Checkbox/Checkbox';
 import { Link } from 'react-router-dom';
-import { PaymentSuccess } from './PaymentSuccess'; //  ДОБАВЬТЕ ИМПОРТ
+import { PaymentSuccess } from './PaymentSuccess';
+import { jobsApi } from '../../../shared/api/jobs'; // <-- ИМПОРТ API
+import { toastStore } from '../../../shared/lib/toast/toastStore'; // <-- ИМПОРТ TOAST
 
 interface ClaimJobModalProps {
   job: Job;
@@ -14,11 +15,27 @@ interface ClaimJobModalProps {
 
 export const ClaimJobModal = ({ job, onClose }: ClaimJobModalProps) => {
   const claimFee = 30.00;
-  const [isPaymentSuccessful, setIsPaymentSuccessful] = useState(false); //  ДОБАВЬТЕ СОСТОЯНИЕ
+  const [isPaymentSuccessful, setIsPaymentSuccessful] = useState(false);
   const [isAgreed, setIsAgreed] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false); // <-- СОСТОЯНИЕ ЗАГРУЗКИ
 
-  const handleConfirmPayment = () => {
-    setIsPaymentSuccessful(true);
+  const handleConfirmPayment = async () => {
+    setIsProcessing(true);
+    try {
+      // Здесь в будущем будет логика реальной оплаты через Stripe.
+      // После успешной "оплаты" отправляем запрос на сервер.
+      
+      const response = await jobsApi.claimJob(job.id);
+      
+      toastStore.show(response.message || 'Job claimed successfully!', 'success');
+      setIsPaymentSuccessful(true);
+
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to claim job.';
+      toastStore.show(errorMessage, 'error');
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   return (
@@ -99,8 +116,8 @@ export const ClaimJobModal = ({ job, onClose }: ClaimJobModalProps) => {
                 </div>
 
                 {/* Confirm Button */}
-                <Button fullWidth size="md" onClick={handleConfirmPayment} disabled={!isAgreed}>
-                    Confirm Payment <ArrowRight size={16}/>
+                <Button fullWidth size="md" onClick={handleConfirmPayment} disabled={!isAgreed || isProcessing}>
+                    {isProcessing ? 'Processing...' : 'Confirm Payment'} <ArrowRight size={16}/>
                 </Button>
             </div>
           </>

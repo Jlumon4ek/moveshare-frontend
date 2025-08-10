@@ -3,6 +3,7 @@ import { PaymentMethodCard } from '../../../entities/PaymentMethod/ui/PaymentMet
 import { Button } from '../../../shared/ui/Button/Button';
 import { ConfirmationModal } from '../../../shared/ui/ConfirmationModal/ConfirmationModal';
 import { PaymentMethodSnippet } from '../../../entities/PaymentMethod/ui/PaymentMethodSnippet';
+import { AddPaymentMethodModal } from '../../AddPaymentMethodModal/ui/AddPaymentMethodModal'; // <-- ИМПОРТ
 
 const mockPaymentMethods = [
     { 
@@ -27,8 +28,10 @@ const mockPaymentMethods = [
     },
 ];
 
+
 export const PaymentSettings = () => {
   const [isRemoveModalOpen, setIsRemoveModalOpen] = useState(false);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false); // <-- НОВОЕ СОСТОЯНИЕ
   const [selectedMethod, setSelectedMethod] = useState<(typeof mockPaymentMethods)[0] | null>(null);
 
   const handleRemoveClick = (method: (typeof mockPaymentMethods)[0]) => {
@@ -50,7 +53,8 @@ export const PaymentSettings = () => {
           <h2 className="text-2xl font-bold text-gray-800">
             Payment Settings
           </h2>
-          <Button size="sm">
+          {/* ОБНОВЛЕННЫЙ ОБРАБОТЧИК */}
+          <Button size="sm" onClick={() => setIsAddModalOpen(true)}>
             + Add Payment Method
           </Button>
         </div>
@@ -72,6 +76,7 @@ export const PaymentSettings = () => {
         </div>
       </div>
 
+      {/* Модальное окно для удаления (без изменений) */}
       {selectedMethod && (
         <ConfirmationModal
           isOpen={isRemoveModalOpen}
@@ -88,6 +93,12 @@ export const PaymentSettings = () => {
             />
         </ConfirmationModal>
       )}
+
+      {/* НОВОЕ МОДАЛЬНОЕ ОКНО */}
+      <AddPaymentMethodModal 
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+      />
     </>
   );
 };

@@ -11,7 +11,7 @@ export const Checkbox = ({ children, className = '', ...props }: CheckboxProps) 
         type="checkbox"
         className={`
           w-4 h-4 text-primary bg-gray-100 border-gray-300 rounded
-          focus:ring-primary focus:ring-2
+          focus:outline-none focus-visible:ring-primary focus-visible:ring-2
           ${className}
         `}
         {...props}

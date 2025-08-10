@@ -9,8 +9,7 @@ interface WebSocketMessage {
     chat_id: number;
 }
 
-export const API_BASE_URL = 'localhost:8080/api';
-
+export const API_BASE_URL = import.meta.env.VITE_WEBSOCKET_URL;
 
 export const useWebSocket = (chatId: number | null, onMessage: (message: Message) => void) => {
     const ws = useRef<WebSocket | null>(null);
@@ -24,7 +23,6 @@ export const useWebSocket = (chatId: number | null, onMessage: (message: Message
             return;
         }
 
-        // Формируем URL для WebSocket
         const wsUrl = `ws://${API_BASE_URL}/chats/${chatId}/ws?token=${accessToken}`;
         
         ws.current = new WebSocket(wsUrl);

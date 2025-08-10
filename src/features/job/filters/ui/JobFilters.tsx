@@ -10,14 +10,34 @@ const SectionLabel = ({ children }: { children: React.ReactNode }) => (
     <label className="block text-sm font-bold text-gray-800 mb-2">{children}</label>
 );
 
+const bedroomOptions = [
+    { value: "", label: "Any Bedrooms" },
+    { value: "1", label: "1 Bedroom" },
+    { value: "2", label: "2 Bedrooms" },
+    { value: "3", label: "3 Bedrooms" },
+    { value: "4", label: "4 Bedrooms" },
+    { value: "5+", label: "5+ Bedrooms" },
+    { value: "office", label: "Office" }
+];
+
 export const JobFilters = () => {
     const [distance, setDistance] = useState(250);
+    const [selectedBedrooms, setSelectedBedrooms] = useState<string>('');
+
+    const handleReset = () => {
+        setSelectedBedrooms('');
+        setDistance(250);
+    };
 
     return (
         <aside className="bg-white p-5 rounded-2xl shadow-sm w-full max-w-xs flex flex-col h-full">
             <div className="flex justify-between items-center mb-5 flex-shrink-0">
                 <h3 className="text-lg font-bold text-gray-900">Filters</h3>
-                <button type="reset" className="text-xs font-medium text-gray-500 hover:text-primary">
+                <button 
+                    type="button" 
+                    className="text-xs font-medium text-gray-500 hover:text-primary"
+                    onClick={handleReset}
+                >
                     Reset
                 </button>
             </div>
@@ -25,8 +45,11 @@ export const JobFilters = () => {
             <div className="flex-1 overflow-y-auto hide-scrollbar pr-2 -mr-2">
                 <form className="space-y-4">
                     <Select 
-                        label="Relocation Size"
-                        options={[{ value: "any", label: "Select number of bedrooms" }, { value: "2", label: "2 bedrooms" }]}
+                        label="Number of Bedrooms"
+                        name="bedrooms"
+                        value={selectedBedrooms}
+                        onChange={(e) => setSelectedBedrooms(e.target.value)}
+                        options={bedroomOptions}
                     />
                     <Select 
                         label="Origin"

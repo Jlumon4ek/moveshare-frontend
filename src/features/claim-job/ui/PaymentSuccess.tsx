@@ -1,6 +1,10 @@
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Check } from 'lucide-react';
 import type { Job } from '../../../shared/api/jobs';
 import { Button } from '../../../shared/ui/Button/Button';
+import { chatsApi } from '../../../shared/api/chats';
+import { toastStore } from '../../../shared/lib/toast/toastStore';
 
 interface PaymentSuccessProps {
   job: Job;
@@ -8,6 +12,31 @@ interface PaymentSuccessProps {
 }
 
 export const PaymentSuccess = ({ job, onClose }: PaymentSuccessProps) => {
+  const navigate = useNavigate();
+  const [isCreatingChat, setIsCreatingChat] = useState(false);
+
+  const handleMessageCompany = async () => {
+    setIsCreatingChat(true);
+    try {
+        const response = await chatsApi.createChat({
+            job_id: job.id,
+            participant_id: job.user_id, 
+        });
+        
+        // ИСПРАВЛЕНИЕ: Получаем ID напрямую из response.chat_id
+        const newChatId = response.chat_id;
+        
+        navigate('/chats', { state: { openChatId: newChatId } });
+
+        onClose();
+    } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : 'Could not start chat.';
+        toastStore.show(errorMessage, 'error');
+    } finally {
+        setIsCreatingChat(false);
+    }
+  };
+
   const transactionDetails = {
     id: 'TX-789456123',
     paymentMethod: 'Visa ending in 1234',
@@ -48,7 +77,14 @@ export const PaymentSuccess = ({ job, onClose }: PaymentSuccessProps) => {
 
       <div className="w-full flex gap-3">
         <Button fullWidth>View Receipt</Button>
-        <Button variant="outline" fullWidth onClick={onClose}>Message Company</Button>
+        <Button 
+            variant="outline" 
+            fullWidth 
+            onClick={handleMessageCompany}
+            disabled={isCreatingChat}
+        >
+            {isCreatingChat ? 'Starting Chat...' : 'Message Company'}
+        </Button>
       </div>
     </div>
   );

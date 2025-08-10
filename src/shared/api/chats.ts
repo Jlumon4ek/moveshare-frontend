@@ -50,6 +50,18 @@ interface MessagesApiResponse {
   };
 }
 
+
+export interface CreateChatPayload {
+  job_id: number;
+  participant_id: number;
+}
+
+interface CreateChatResponse {
+  chat_id: number;
+  message: string;
+  success: boolean;
+}
+
 export interface NewMessagePayload {
   message_text: string;
   message_type: 'text';
@@ -98,6 +110,21 @@ export const chatsApi = {
         'Authorization': `Bearer ${accessToken}`,
       },
       body: JSON.stringify(payload),
+    });
+  },
+
+  createChat: async (payload: CreateChatPayload): Promise<CreateChatResponse> => {
+    const { accessToken } = authStore.getState();
+    if (!accessToken) {
+        throw new Error('Not authorized');
+    }
+
+    return apiRequest('/chats/', {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify(payload),
     });
   },
 };

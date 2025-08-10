@@ -1,14 +1,19 @@
 interface DashboardMessageItemProps {
+    id: number; // <-- ДОБАВЛЕНО
     avatarUrl: string;
     name: string;
     message: string;
     time: string;
     unreadCount: number;
+    onClick: (id: number) => void; // <-- ДОБАВЛЕНО
 }
 
-export const DashboardMessageItem = ({ avatarUrl, name, message, time, unreadCount }: DashboardMessageItemProps) => {
+export const DashboardMessageItem = ({ id, avatarUrl, name, message, time, unreadCount, onClick }: DashboardMessageItemProps) => {
     return(
-        <div className="flex items-center gap-4 py-3 border-b border-gray-100 last:border-0">
+        <div 
+            onClick={() => onClick(id)} // <-- ДОБАВЛЕНО
+            className="flex items-center gap-4 py-3 border-b border-gray-100 last:border-0 cursor-pointer hover:bg-gray-50 rounded-lg p-2 -m-2 transition-colors"
+        >
             <img src={avatarUrl} alt={name} className="w-10 h-10 rounded-full object-cover" />
             <div className="flex-1">
                 <p className="font-bold text-gray-800">{name}</p>

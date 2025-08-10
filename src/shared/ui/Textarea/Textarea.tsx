@@ -1,4 +1,4 @@
-import { type TextareaHTMLAttributes, forwardRef, useRef, useEffect, type ChangeEvent } from 'react';
+import { type TextareaHTMLAttributes, forwardRef, useRef, useCallback, type ChangeEvent } from 'react';
 
 interface TextareaProps extends TextareaHTMLAttributes<HTMLTextAreaElement> {
   label?: string;
@@ -6,25 +6,34 @@ interface TextareaProps extends TextareaHTMLAttributes<HTMLTextAreaElement> {
 }
 
 export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
-  ({ label, error, className = '', onChange, ...props }) => {
-    const localRef = useRef<HTMLTextAreaElement>(null);
-    
+  ({ label, error, className = '', onChange, ...props }, ref) => {
+    const internalRef = useRef<HTMLTextAreaElement | null>(null);
+
+
+    const combinedRef = useCallback((node: HTMLTextAreaElement) => {
+      internalRef.current = node;
+      
+      if (typeof ref === 'function') {
+        ref(node);
+      } else if (ref) {
+        ref.current = node;
+      }
+
+      if (node) {
+        node.style.height = 'auto';
+        node.style.height = `${node.scrollHeight}px`;
+      }
+    }, [ref]);
+
     const handleInput = (e: ChangeEvent<HTMLTextAreaElement>) => {
-      if (localRef.current) {
-        localRef.current.style.height = 'auto';
-        localRef.current.style.height = `${e.target.scrollHeight}px`;
+      if (internalRef.current) {
+        internalRef.current.style.height = 'auto';
+        internalRef.current.style.height = `${e.target.scrollHeight}px`;
       }
       if (onChange) {
         onChange(e);
       }
     };
-
-    useEffect(() => {
-        if(localRef.current) {
-            localRef.current.style.height = 'auto';
-            localRef.current.style.height = `${localRef.current.scrollHeight}px`;
-        }
-    }, [])
 
     return (
       <div className="w-full">
@@ -34,7 +43,7 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
           </label>
         )}
         <textarea
-          ref={localRef}
+          ref={combinedRef}
           className={`
             w-full px-4 py-3 bg-gray-100 border-0 rounded-lg
             text-gray-900 placeholder-gray-400

@@ -76,6 +76,22 @@ class AuthStore {
     this.notify();
   }
 
+  // НОВЫЙ МЕТОД ДЛЯ ОБНОВЛЕНИЯ ТОКЕНОВ
+  setTokens(tokens: { access_token: string; refresh_token: string }) {
+    if (!this.state.user) return; // Не обновляем, если нет пользователя
+
+    this.state = {
+      ...this.state,
+      accessToken: tokens.access_token,
+      refreshToken: tokens.refresh_token,
+      isAuthenticated: true,
+    };
+    
+    this.saveToStorage();
+    this.notify();
+  }
+
+
   clearAuth() {
     this.state = {
       user: null,
@@ -87,6 +103,10 @@ class AuthStore {
     localStorage.removeItem('access_token');
     localStorage.removeItem('refresh_token');
     localStorage.removeItem('user');
+    
+    // Перезагружаем страницу для редиректа на /sign-in
+    // Это самый надежный способ сбросить все состояния приложения
+    window.location.reload(); 
     
     this.notify();
   }

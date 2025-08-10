@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { JobCard } from '../../entities/Job/ui/JobCard';
 import { JobFilters } from '../../features/job/filters/ui/JobFilters';
-import { jobsApi, type Job } from '../../shared/api/jobs';
+import { jobsApi, type Job, type AvailableJobsParams } from '../../shared/api/jobs';
 import { Pagination } from '../../shared/ui/Pagination/Pagination';
 import { ClaimJobModal } from '../../features/claim-job/ui/ClaimjobModal';
 
@@ -11,7 +11,7 @@ type JobCardType = Job & {
   isNew?: boolean;
 };
 
-const ITEMS_PER_PAGE = 12;
+const ITEMS_PER_PAGE = 12; // Количество работ на одной странице
 
 export const AvailableJobsPage = () => {
   const [jobs, setJobs] = useState<JobCardType[]>([]);
@@ -26,14 +26,16 @@ export const AvailableJobsPage = () => {
 
   useEffect(() => {
     const fetchJobs = async () => {
+      setIsLoading(true);
+      setError(null);
       try {
-        setIsLoading(true);
-        const params = {
+        const params: AvailableJobsParams = {
             limit: ITEMS_PER_PAGE,
             offset: (currentPage - 1) * ITEMS_PER_PAGE,
-        }
+        };
         const response = await jobsApi.getAvailableJobs(params);
 
+        // Добавляем доп. поля, как и раньше
         const jobsWithExtras = response.jobs.map((job, index) => ({
           ...job,
           distance: job.distance_miles,
@@ -42,7 +44,7 @@ export const AvailableJobsPage = () => {
         }));
         
         setJobs(jobsWithExtras);
-        setTotalJobs(response.total);
+        setTotalJobs(response.total); // Сохраняем общее количество работ
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to fetch jobs');
       } finally {
@@ -51,11 +53,11 @@ export const AvailableJobsPage = () => {
     };
 
     fetchJobs();
-  }, [currentPage]);
+  }, [currentPage]); // Перезапускаем эффект при изменении currentPage
 
   const handlePageChange = (page: number) => {
       setCurrentPage(page);
-      window.scrollTo(0, 0);
+      window.scrollTo(0, 0); // Прокручиваем наверх при смене страницы
   }
 
   const handleClaimJobClick = (job: Job) => {
@@ -105,6 +107,8 @@ export const AvailableJobsPage = () => {
           <div className="flex-grow">
             {renderContent()}
           </div>
+          
+          {/* Отображаем пагинацию, если работ больше, чем на одной странице */}
           {!isLoading && totalJobs > ITEMS_PER_PAGE && (
               <div className="mt-6 flex-shrink-0">
                   <Pagination 
