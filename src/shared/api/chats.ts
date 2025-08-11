@@ -69,7 +69,7 @@ export interface NewMessagePayload {
 
 
 export const chatsApi = {
-  getChats: async (limit: number, offset: number): Promise<ChatsApiResponse> => {
+  getChats: async (_limit: number, _offset: number): Promise<ChatsApiResponse> => {
     const { accessToken } = authStore.getState();
     if (!accessToken) {
       throw new Error('Not authorized');

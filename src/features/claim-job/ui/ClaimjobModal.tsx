@@ -1,7 +1,5 @@
-// src/features/claim-job/ui/ClaimjobModal.tsx
-
-import { useState } from 'react';
-import { ArrowRight, CreditCard, X } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { ArrowRight, X } from 'lucide-react';
 import type { Job } from '../../../shared/api/jobs';
 import { Button } from '../../../shared/ui/Button/Button';
 import { Checkbox } from '../../../shared/ui/Checkbox/Checkbox';
@@ -9,6 +7,8 @@ import { Link } from 'react-router-dom';
 import { PaymentSuccess } from './PaymentSuccess';
 import { jobsApi } from '../../../shared/api/jobs';
 import { toastStore } from '../../../shared/lib/toast/toastStore';
+import { paymentApi, type Card } from '../../../shared/api/payments'; // Импорт API и типа карты
+import { Select } from '../../../shared/ui/Select/Select'; // Импорт компонента Select
 
 interface ClaimJobModalProps {
   job: Job;
@@ -16,17 +16,65 @@ interface ClaimJobModalProps {
 }
 
 export const ClaimJobModal = ({ job, onClose }: ClaimJobModalProps) => {
-  const claimFee = 30.00;
+  const claimFee = 30.00; // $30.00
+  const claimFeeCents = 3000; // 30.00 в центах
+
   const [isPaymentSuccessful, setIsPaymentSuccessful] = useState(false);
   const [isAgreed, setIsAgreed] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  
+  // Состояния для карт
+  const [cards, setCards] = useState<Card[]>([]);
+  const [selectedCardId, setSelectedCardId] = useState<string>('');
+  const [isLoadingCards, setIsLoadingCards] = useState(true);
+
+  useEffect(() => {
+    const fetchCards = async () => {
+      try {
+        setIsLoadingCards(true);
+        const response = await paymentApi.getCards();
+        const fetchedCards = response.cards || [];
+        setCards(fetchedCards);
+        
+        // Находим карту по умолчанию и устанавливаем ее как выбранную
+        const defaultCard = fetchedCards.find(card => card.is_default);
+        if (defaultCard) {
+          setSelectedCardId(String(defaultCard.id));
+        } else if (fetchedCards.length > 0) {
+          // Если нет карты по умолчанию, выбираем первую
+          setSelectedCardId(String(fetchedCards[0].id));
+        }
+      } catch (err) {
+        toastStore.show(err instanceof Error ? err.message : 'Failed to load payment methods.', 'error');
+      } finally {
+        setIsLoadingCards(false);
+      }
+    };
+
+    fetchCards();
+  }, []);
+
 
   const handleConfirmPayment = async () => {
     setIsProcessing(true);
     try {
-      const response = await jobsApi.claimJob(job.id);
+      // Шаг 1: Создание Payment Intent
+      const intentResponse = await paymentApi.createPaymentIntent({
+        job_id: job.id,
+        payment_method_id: Number(selectedCardId),
+        amount_cents: claimFeeCents,
+        description: `Payment for moving job #${job.id}`,
+      });
+
+      // Шаг 2: Подтверждение платежа
+      await paymentApi.confirmPayment({
+        payment_intent_id: intentResponse.payment_intent_id,
+      });
+
+      // Шаг 3: Финальное подтверждение получения работы
+      const claimResponse = await jobsApi.claimJob(job.id);
       
-      toastStore.show(response.message || 'Job claimed successfully!', 'success');
+      toastStore.show(claimResponse.message || 'Job claimed successfully!', 'success');
       setIsPaymentSuccessful(true);
 
     } catch (err) {
@@ -37,8 +85,13 @@ export const ClaimJobModal = ({ job, onClose }: ClaimJobModalProps) => {
     }
   };
 
-  // Динамически создаем заголовок, так как job_title отсутствует в API
   const jobTitle = `${job.job_type.charAt(0).toUpperCase() + job.job_type.slice(1)} Move`;
+
+  // Форматируем карты для компонента Select
+  const cardOptions = cards.map(card => ({
+      value: String(card.id),
+      label: `${card.card_brand} **** ${card.card_last4} (Expires ${card.card_exp_month}/${card.card_exp_year})`
+  }));
 
   return (
     <div
@@ -56,7 +109,6 @@ export const ClaimJobModal = ({ job, onClose }: ClaimJobModalProps) => {
             {/* Header */}
             <div className="bg-primary text-white p-6 text-center relative">
               <h2 className="text-2xl font-bold">Claim Job</h2>
-              {/* ФИКС: Добавляем проверку на существование payment_amount */}
               <p className="text-white/90">You will earn ${(job.payment_amount || 0).toLocaleString()}</p>
               <button onClick={onClose} className="absolute top-4 right-4 text-white/70 hover:text-white">
                   <X size={24} />
@@ -104,22 +156,20 @@ export const ClaimJobModal = ({ job, onClose }: ClaimJobModalProps) => {
                 {/* Payment Method */}
                 <div>
                     <h3 className="font-semibold text-lg text-gray-800 mb-3">Select Payment Method</h3>
-                    <div className="border border-gray-200 rounded-xl p-3 flex justify-between items-center">
-                        <div className="flex items-center gap-3">
-                            <div className="bg-gray-100 p-2 rounded-md">
-                                <CreditCard size={20} className="text-gray-500" />
-                            </div>
-                            <div>
-                                <p className="font-medium text-gray-800">Visa ending in 1234</p>
-                                <p className="text-xs text-gray-500">Expires 12/2025</p>
-                            </div>
-                        </div>
-                        <span className="text-xs font-medium text-blue-600 bg-blue-100 px-2 py-1 rounded-full">Default</span>
-                    </div>
+                    {isLoadingCards ? (
+                        <p className="text-sm text-gray-500">Loading cards...</p>
+                    ) : (
+                        <Select
+                            name="paymentMethod"
+                            value={selectedCardId}
+                            onChange={(e) => setSelectedCardId(e.target.value)}
+                            options={cardOptions}
+                        />
+                    )}
                 </div>
 
                 {/* Confirm Button */}
-                <Button fullWidth size="md" onClick={handleConfirmPayment} disabled={!isAgreed || isProcessing}>
+                <Button fullWidth size="md" onClick={handleConfirmPayment} disabled={!isAgreed || isProcessing || isLoadingCards || cards.length === 0}>
                     {isProcessing ? 'Processing...' : 'Confirm Payment'} <ArrowRight size={16}/>
                 </Button>
             </div>

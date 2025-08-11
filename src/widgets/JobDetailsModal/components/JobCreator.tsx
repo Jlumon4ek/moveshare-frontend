@@ -1,4 +1,3 @@
-import React from 'react';
 import { Award, Star, CheckCircle, Phone, Mail } from 'lucide-react';
 
 interface JobCreatorProps {

@@ -156,7 +156,7 @@ export const AddTruckModal = ({ onClose, onSuccess }: AddTruckModalProps) => {
 
                         <section className="lg:col-span-2">
                             <SectionHeader icon={Box} title="Truck Photos" />
-                            <Uploader files={files} setFiles={setFiles} />
+                            <Uploader files={files} setFiles={setFiles} title={''} description={''} />
                         </section>
                         
                         <div className="flex justify-end gap-4 lg:col-span-2 border-t border-gray-200 pt-5">

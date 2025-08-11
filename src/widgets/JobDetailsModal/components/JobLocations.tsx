@@ -1,4 +1,3 @@
-import React from 'react';
 import { MapPin, Building, Home } from 'lucide-react';
 
 interface JobLocationsProps {

@@ -3,10 +3,12 @@ import { type InputHTMLAttributes, forwardRef } from 'react';
 interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   label?: string;
   error?: string;
+  onPlaceSelected?: (place: any) => void; // "Перехватываем" свойство
 }
 
 export const Input = forwardRef<HTMLInputElement, InputProps>(
-  ({ label, error, className = '', ...props }, ref) => {
+  ({ label, error, className = '', onPlaceSelected, ...props }, ref) => {
+    // onPlaceSelected намеренно не передается в <input>
     return (
       <div className="w-full">
         {label && (

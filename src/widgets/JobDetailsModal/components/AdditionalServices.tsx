@@ -1,4 +1,3 @@
-import React from 'react';
 import { CheckCircle, Package, Weight, Box, Building } from 'lucide-react';
 
 interface AdditionalServicesProps {

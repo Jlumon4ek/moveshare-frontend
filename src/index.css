@@ -87,3 +87,30 @@
 .react-datepicker__triangle {
     display: none !important;
 }
+
+
+/* Google Places Dropdown Styling */
+.pac-container {
+  z-index: 9999 !important;
+  margin-top: 4px !important;
+  border-radius: 8px !important;
+  border: 1px solid #e5e7eb !important; /* border-gray-200 */
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1) !important;
+  background-color: white !important;
+}
+
+.pac-item {
+  padding: 8px 12px !important;
+  font-size: 14px !important;
+  cursor: pointer;
+  border: none !important;
+}
+
+.pac-item:hover {
+  background-color: #F3F4F6 !important; /* bg-gray-100 */
+}
+
+.pac-item-query {
+  font-weight: 500 !important;
+  color: #111827 !important; /* text-gray-900 */
+}
