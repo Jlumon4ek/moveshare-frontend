@@ -198,19 +198,19 @@
                                  checked={truckSizes.includes('Small')}
                                  onChange={(e) => handleTruckSizeChange('Small', e.target.checked)}
                              >
-                                 Small (≤26')
+                                 Small (15')
                              </Checkbox>
                              <Checkbox
                                  checked={truckSizes.includes('Medium')}
                                  onChange={(e) => handleTruckSizeChange('Medium', e.target.checked)}
                              >
-                                 Medium (27'-52')
+                                 Medium (20+')
                              </Checkbox>
                              <Checkbox
                                  checked={truckSizes.includes('Large')}
                                  onChange={(e) => handleTruckSizeChange('Large', e.target.checked)}
                              >
-                                 Large (≥53')
+                                 Large (26+')
                              </Checkbox>
                          </div>
                      </div>
