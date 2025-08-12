@@ -1,4 +1,4 @@
-import { X, MapPin, Calendar, DollarSign, Truck, Package, ArrowRight } from 'lucide-react';
+import { MapPin, Calendar, DollarSign, Truck, Package, ArrowRight } from 'lucide-react';
 
 interface JobDetailsHeaderProps {
     jobTitle: string;

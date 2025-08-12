@@ -1,4 +1,4 @@
-import { ChevronLeft, AlertTriangle, Loader2 } from 'lucide-react';
+import { AlertTriangle, Loader2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { MessageBubble } from '../../../entities/Message/ui/MessageBubble';
 import { SendMessageForm } from '../../../features/SendMessageForm/ui/SendMessageForm';

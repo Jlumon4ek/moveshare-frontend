@@ -96,7 +96,7 @@ export const PaymentSettings = () => {
             Payment Settings
           </h2>
           <Button 
-            size="xs" 
+            size="sm" 
             onClick={() => setIsAddModalOpen(true)}
             className="w-full sm:w-auto text-sm px-3 py-2"
           >
@@ -136,6 +136,7 @@ export const PaymentSettings = () => {
       <AddPaymentMethodModal 
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
+        onSuccess={() => setIsAddModalOpen(false)}
       />
     </>
   );
