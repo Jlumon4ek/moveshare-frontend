@@ -62,9 +62,7 @@ export const PaymentSettings = () => {
     }
   };
 
-  const handleAddSuccess = () => {
-    fetchCards();
-  };
+
   
   const renderContent = () => {
     if (isLoading) {
@@ -127,7 +125,6 @@ export const PaymentSettings = () => {
       <AddPaymentMethodModal 
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
-        onSuccess={handleAddSuccess}
       />
     </>
   );

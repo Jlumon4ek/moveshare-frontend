@@ -5,6 +5,11 @@ import { PostJobModal } from '../../widgets/PostJobModal/ui/PostJobModal';
 
 export const MyJobsPage = () => {
     const [isPostJobModalOpen, setIsPostJobModalOpen] = useState(false);
+    const [refreshKey, setRefreshKey] = useState(0);
+
+    const handleJobCreated = () => {
+        setRefreshKey(prev => prev + 1);
+    };
 
     return (
         <>
@@ -17,13 +22,14 @@ export const MyJobsPage = () => {
                 </header>
                 
                 <div className="flex-1 mt-6 overflow-hidden">
-                    <MyJobsWidget />
+                    <MyJobsWidget key={refreshKey} />
                 </div>
             </div>
             
             <PostJobModal
                 isOpen={isPostJobModalOpen}
                 onClose={() => setIsPostJobModalOpen(false)}
+                onSuccess={handleJobCreated}
             />
         </>
     );

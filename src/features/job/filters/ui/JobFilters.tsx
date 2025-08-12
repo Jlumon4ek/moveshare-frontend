@@ -1,4 +1,9 @@
+// src/features/job/filters/ui/JobFilters.tsx
+
 import { useState } from 'react';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
+import { Calendar } from 'lucide-react';
 import { Button } from '../../../../shared/ui/Button/Button';
 import { Checkbox } from '../../../../shared/ui/Checkbox/Checkbox';
 import { Input } from '../../../../shared/ui/Input/Input';
@@ -29,8 +34,8 @@ export const JobFilters = ({ onFiltersChange }: JobFiltersProps) => {
     const [origin, setOrigin] = useState<string>('');
     const [destination, setDestination] = useState<string>('');
     const [distance, setDistance] = useState(500);
-    const [dateStart, setDateStart] = useState<string>('');
-    const [dateEnd, setDateEnd] = useState<string>('');
+    const [dateStart, setDateStart] = useState<Date | null>(null);
+    const [dateEnd, setDateEnd] = useState<Date | null>(null);
     const [truckSizes, setTruckSizes] = useState<string[]>([]);
     const [payoutMin, setPayoutMin] = useState<string>('');
     const [payoutMax, setPayoutMax] = useState<string>('');
@@ -40,8 +45,8 @@ export const JobFilters = ({ onFiltersChange }: JobFiltersProps) => {
         setOrigin('');
         setDestination('');
         setDistance(500);
-        setDateStart('');
-        setDateEnd('');
+        setDateStart(null);
+        setDateEnd(null);
         setTruckSizes([]);
         setPayoutMin('');
         setPayoutMax('');
@@ -57,15 +62,17 @@ export const JobFilters = ({ onFiltersChange }: JobFiltersProps) => {
     const handleApplyFilters = () => {
         const filters: AvailableJobsParams = {};
         
+        const apiTruckSizes = truckSizes.map(size => size.toLowerCase());
+        
         if (selectedBedrooms) filters.number_of_bedrooms = selectedBedrooms;
-        if (origin) filters.origin = origin;
-        if (destination) filters.destination = destination;
+        if (origin) filters.pickup_location = origin;
+        if (destination) filters.delivery_location = destination;
         if (distance < 500) filters.max_distance = distance;
-        if (dateStart) filters.date_start = dateStart;
-        if (dateEnd) filters.date_end = dateEnd;
-        if (truckSizes.length > 0) filters.truck_size = truckSizes.join(',');
-        if (payoutMin) filters.payout_min = parseFloat(payoutMin);
-        if (payoutMax) filters.payout_max = parseFloat(payoutMax);
+        if (dateStart) filters.pickup_date_start = dateStart.toISOString().split('T')[0];
+        if (dateEnd) filters.pickup_date_end = dateEnd.toISOString().split('T')[0];
+        if (apiTruckSizes.length > 0) filters.truck_size = apiTruckSizes.join(',');
+        if (payoutMin) filters.payout_max = parseFloat(payoutMin);
+        if (payoutMax) filters.payout_min = parseFloat(payoutMax);
 
         onFiltersChange(filters);
     };
@@ -83,7 +90,8 @@ export const JobFilters = ({ onFiltersChange }: JobFiltersProps) => {
                 </button>
             </div>
 
-            <div className="flex-1 overflow-y-auto hide-scrollbar pr-2 -mr-2">
+            {/* ИЗМЕНЕНИЕ ЗДЕСЬ: убраны классы pr-2 и -mr-2, которые обрезали контент */}
+            <div className="flex-1 overflow-y-auto hide-scrollbar">
                 <form className="space-y-4">
                     <Select 
                         label="Number of Bedrooms"
@@ -123,19 +131,27 @@ export const JobFilters = ({ onFiltersChange }: JobFiltersProps) => {
 
                     <div className="relative">
                        <SectionLabel>Date Start</SectionLabel>
-                       <Input 
-                           type="date" 
-                           value={dateStart}
-                           onChange={(e) => setDateStart(e.target.value)}
+                       <DatePicker
+                            selected={dateStart}
+                            onChange={(date) => setDateStart(date)}
+                            dateFormat="MM/dd/yyyy"
+                            placeholderText="mm/dd/yyyy"
+                            customInput={<Input />}
+                            minDate={new Date()}
                        />
+                       <Calendar className="absolute right-3 top-10 text-gray-400 pointer-events-none" size={18}/>
                     </div>
                      <div className="relative">
                        <SectionLabel>Date End</SectionLabel>
-                       <Input 
-                           type="date" 
-                           value={dateEnd}
-                           onChange={(e) => setDateEnd(e.target.value)}
+                       <DatePicker
+                            selected={dateEnd}
+                            onChange={(date) => setDateEnd(date)}
+                            dateFormat="MM/dd/yyyy"
+                            placeholderText="mm/dd/yyyy"
+                            customInput={<Input />}
+                            minDate={dateStart || new Date()}
                        />
+                       <Calendar className="absolute right-3 top-10 text-gray-400 pointer-events-none" size={18}/>
                     </div>
 
                     <div>

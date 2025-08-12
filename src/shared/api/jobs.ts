@@ -45,7 +45,7 @@ export interface Job {
 
 
 interface PaginatedJobsResponse {
-  jobs: Job[] | null; // Разрешаем jobs быть null
+  jobs: Job[] | null; 
   pagination: {
     limit: number;
     page: number;
@@ -197,6 +197,21 @@ export const jobsApi = {
       headers: {
         'Authorization': `Bearer ${accessToken}`,
       },
+    });
+  },
+
+  exportJobs: async (jobIds: number[]): Promise<Blob> => {
+    const { accessToken } = authStore.getState();
+    if (!accessToken) {
+      throw new Error('Not authorized');
+    }
+
+    return apiRequest(`/jobs/export-jobs/`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify({ job_ids: jobIds }),
     });
   },
 

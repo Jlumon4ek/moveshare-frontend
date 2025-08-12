@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { jobsApi, type Job } from '../../../shared/api/jobs';
 import { Checkbox } from '../../../shared/ui/Checkbox/Checkbox';
 import { Button } from '../../../shared/ui/Button/Button';
+import { JobDetailsModal } from '../../JobDetailsModal/ui/JobDetailsModal';
 import { Eye, MapPin, Calendar, Truck, DollarSign, Trash2, AlertTriangle, X } from 'lucide-react';
 import cn from 'classnames';
 
@@ -28,19 +29,25 @@ export const MyJobsWidget = () => {
         isOpen: false, 
         jobId: null 
     });
+    const [jobDetailsModal, setJobDetailsModal] = useState<{ isOpen: boolean; jobId: number | null }>({
+        isOpen: false,
+        jobId: null
+    });
+    const [isExporting, setIsExporting] = useState(false);
+
+    const fetchJobs = async () => {
+        try {
+            setIsLoading(true);
+            const response = await jobsApi.getMyJobs();
+            setJobs(response.jobs || []);
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'Failed to fetch jobs');
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     useEffect(() => {
-        const fetchJobs = async () => {
-            try {
-                setIsLoading(true);
-                const response = await jobsApi.getMyJobs();
-                setJobs(response.jobs || []);
-            } catch (err) {
-                setError(err instanceof Error ? err.message : 'Failed to fetch jobs');
-            } finally {
-                setIsLoading(false);
-            }
-        };
         fetchJobs();
     }, []);
 
@@ -75,6 +82,48 @@ export const MyJobsWidget = () => {
         });
     };
 
+    const handleViewJobDetails = (jobId: number) => {
+        setJobDetailsModal({
+            isOpen: true,
+            jobId
+        });
+    };
+
+    const handleExportJobs = async () => {
+        if (selectedJobs.length === 0) return;
+
+        setIsExporting(true);
+        try {
+            const blob = await jobsApi.exportJobs(selectedJobs);
+            
+            // Create download link
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            
+            // Generate filename with current date
+            const now = new Date();
+            const dateStr = now.toISOString().split('T')[0]; // YYYY-MM-DD format
+            link.download = `my-jobs-${dateStr}.csv`;
+            
+            // Trigger download
+            document.body.appendChild(link);
+            link.click();
+            
+            // Cleanup
+            document.body.removeChild(link);
+            window.URL.revokeObjectURL(url);
+            
+            // Clear selection after successful export
+            setSelectedJobs([]);
+        } catch (error) {
+            console.error('Failed to export jobs:', error);
+            // You could add a toast notification here for better UX
+        } finally {
+            setIsExporting(false);
+        }
+    };
+
     const confirmDeleteJob = async () => {
         const { jobId } = deleteModal;
         if (!jobId) return;
@@ -102,7 +151,6 @@ export const MyJobsWidget = () => {
         return (
             <div className="bg-white rounded-2xl shadow-sm h-full flex flex-col">
                 <div className="bg-gradient-to-r from-gray-50 to-white px-6 py-4 border-b border-gray-200">
-                    <h2 className="text-xl font-bold text-gray-900 mb-4">My Jobs</h2>
                     <div className="flex space-x-1 bg-gray-100 rounded-lg p-1">
                         {TABS.map(tab => (
                             <div key={tab} className="flex-1 py-2 px-4 bg-gray-200 rounded-md animate-pulse h-10"></div>
@@ -123,7 +171,6 @@ export const MyJobsWidget = () => {
         return (
             <div className="bg-white rounded-2xl shadow-sm h-full flex flex-col">
                 <div className="bg-gradient-to-r from-gray-50 to-white px-6 py-4 border-b border-gray-200">
-                    <h2 className="text-xl font-bold text-gray-900">My Jobs</h2>
                 </div>
                 <div className="flex-1 flex items-center justify-center">
                     <div className="text-center">
@@ -147,7 +194,6 @@ export const MyJobsWidget = () => {
         <div className="bg-white rounded-2xl shadow-sm h-full flex flex-col overflow-hidden">
             {/* Header with Tabs */}
             <div className="bg-gradient-to-r from-gray-50 to-white px-6 py-4 border-b border-gray-200">
-                <h2 className="text-xl font-bold text-gray-900 mb-4">My Jobs</h2>
                 <div className="flex space-x-1 bg-gray-100 rounded-lg p-1">
                     {TABS.map(tab => (
                         <button 
@@ -250,7 +296,7 @@ export const MyJobsWidget = () => {
                                     <div className="flex items-center gap-2">
                                         <DollarSign size={16} className="text-green-600" />
                                         <span className="text-sm font-bold text-green-600">
-                                            ${job.payment_amount.toLocaleString()}
+                                            {job.payment_amount.toLocaleString()}
                                         </span>
                                     </div>
                                 </td>
@@ -273,6 +319,7 @@ export const MyJobsWidget = () => {
                                     <div className="flex items-center gap-2">
                                         <button 
                                             className="p-2 text-gray-400 hover:text-primary hover:bg-primary/10 rounded-lg transition-colors duration-150"
+                                            onClick={() => handleViewJobDetails(job.id)}
                                             title="View job details"
                                         >
                                             <Eye size={18}/>
@@ -326,8 +373,21 @@ export const MyJobsWidget = () => {
                             </p>
                         </div>
                         <div className="flex gap-3">
-                            <Button variant="outline" size="sm" className="bg-white">
-                                Export to CSV
+                            <Button 
+                                variant="outline" 
+                                size="sm" 
+                                className="bg-white"
+                                onClick={handleExportJobs}
+                                disabled={isExporting || selectedJobs.length === 0}
+                            >
+                                {isExporting ? (
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-4 h-4 border-2 border-gray-400 border-t-gray-700 rounded-full animate-spin" />
+                                        Exporting...
+                                    </div>
+                                ) : (
+                                    'Export to CSV'
+                                )}
                             </Button>
                             <Button variant="danger" size="sm">
                                 Cancel Selected
@@ -492,6 +552,15 @@ export const MyJobsWidget = () => {
                         </div>
                     </div>
                 </div>
+            )}
+
+            {/* Job Details Modal */}
+            {jobDetailsModal.isOpen && jobDetailsModal.jobId && (
+                <JobDetailsModal
+                    jobId={jobDetailsModal.jobId}
+                    isOpen={jobDetailsModal.isOpen}
+                    onClose={() => setJobDetailsModal({ isOpen: false, jobId: null })}
+                />
             )}
         </div>
     );

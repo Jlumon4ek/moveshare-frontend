@@ -47,6 +47,12 @@ export interface ConfirmPaymentRequest {
   payment_intent_id: string;
 }
 
+export interface AddCardResponse {
+    payment_method: Card;
+    message: string;
+    success: boolean;
+}
+
 // API object with methods for card operations
 export const paymentApi = {
   /**
@@ -69,11 +75,9 @@ export const paymentApi = {
   /**
    * Add a new payment card
    */
-  addCard: async (data: AddCardRequest): Promise<Card> => {
+  addCard: async (data: AddCardRequest): Promise<AddCardResponse> => {
     const { accessToken } = authStore.getState();
-    if (!accessToken) {
-      throw new Error('Not authorized');
-    }
+    if (!accessToken) throw new Error('Not authorized');
 
     return apiRequest('/payment/cards', {
       method: 'POST',

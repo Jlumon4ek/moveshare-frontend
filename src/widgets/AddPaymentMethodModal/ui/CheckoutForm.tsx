@@ -1,3 +1,5 @@
+// src/widgets/AddPaymentMethodModal/ui/CheckoutForm.tsx
+
 import { useState, type FormEvent } from 'react';
 import { useStripe, useElements, CardElement } from '@stripe/react-stripe-js';
 import { Button } from '../../../shared/ui/Button/Button';
@@ -16,16 +18,14 @@ interface CheckoutFormProps {
 const CARD_ELEMENT_OPTIONS = {
   style: {
     base: {
-      color: "#374151", // text-gray-700
+      color: "#374151",
       fontFamily: 'Onest, sans-serif',
       fontSmoothing: "antialiased",
       fontSize: "16px",
-      "::placeholder": {
-        color: "#9ca3af", // text-gray-400
-      },
+      "::placeholder": { color: "#9ca3af" },
     },
     invalid: {
-      color: "#ef4444", // text-red-500
+      color: "#ef4444",
       iconColor: "#ef4444",
     },
   },
@@ -41,15 +41,10 @@ export const CheckoutForm = ({ onClose, setError, onSuccess }: CheckoutFormProps
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
     setError(null);
-
-    if (!stripe || !elements) {
-      return;
-    }
+    if (!stripe || !elements) return;
 
     setIsProcessing(true);
-
     const cardElement = elements.getElement(CardElement);
-
     if (!cardElement) {
         setIsProcessing(false);
         return;
@@ -57,34 +52,37 @@ export const CheckoutForm = ({ onClose, setError, onSuccess }: CheckoutFormProps
 
     const userEmail = authStore.getState().user?.email;
 
-    const { error: stripeError, paymentMethod } = await stripe.createPaymentMethod({
+    const { error, paymentMethod } = await stripe.createPaymentMethod({
       type: 'card',
       card: cardElement,
-      billing_details: {
-        name: name,
-        email: userEmail,
-      },
+      billing_details: { name, email: userEmail },
     });
 
-    if (stripeError) {
-      setError(stripeError.message ?? "An unknown error occurred.");
+    if (error || !paymentMethod) {
+      setError(error?.message ?? "Failed to create payment method.");
       setIsProcessing(false);
       return;
     }
-    
-    if (paymentMethod) {
-      try {
-        await paymentApi.addCard({ payment_method_id: paymentMethod.id });
-        toastStore.show('Payment method added successfully!', 'success');
-        onSuccess();
-        onClose();
-      } catch (apiError) {
-        const message = apiError instanceof Error ? apiError.message : 'Could not save payment method.';
-        setError(message);
-      }
-    }
 
-    setIsProcessing(false);
+    try {
+      // --- ФИКС: ПРАВИЛЬНО ОБРАБАТЫВАЕМ ОТВЕТ ---
+      const response = await paymentApi.addCard({ payment_method_id: paymentMethod.id });
+      const newCard = response.payment_method; // Получаем вложенный объект
+
+      if (isDefault) {
+        // Используем ID из правильного объекта
+        await paymentApi.setDefaultCard(newCard.id);
+      }
+
+      toastStore.show('Payment method added successfully!', 'success');
+      onSuccess();
+      onClose();
+
+    } catch (apiError) {
+        setError(apiError instanceof Error ? apiError.message : 'Could not save card.');
+    } finally {
+        setIsProcessing(false);
+    }
   };
 
   return (

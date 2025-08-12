@@ -18,6 +18,7 @@ import cn from 'classnames';
 interface PostJobModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onSuccess?: () => void;
 }
 
 const Section = ({ title, icon, children }: { title: string, icon: ReactNode, children: ReactNode }) => (
@@ -114,9 +115,15 @@ const generateTimeOptions = (placeholder: string) => {
     for (let h = 0; h < 24; h++) {
       for (let m = 0; m < 60; m += 30) {
         const minute = String(m).padStart(2, '0');
-        const hour = String(h).padStart(2, '0');
-        const timeValue = `${hour}:${minute}`;
-        options.push({ value: timeValue, label: timeValue });
+        const hour24 = String(h).padStart(2, '0');
+        const timeValue = `${hour24}:${minute}`;
+        
+        // Convert to 12-hour format for display
+        const hour12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
+        const period = h < 12 ? 'AM' : 'PM';
+        const displayTime = `${hour12}:${minute} ${period}`;
+        
+        options.push({ value: timeValue, label: displayTime });
       }
     }
     return options;
@@ -125,7 +132,7 @@ const timeOptionsFrom = generateTimeOptions('From');
 const timeOptionsTo = generateTimeOptions('To');
 
 
-export const PostJobModal = ({ isOpen, onClose }: PostJobModalProps) => {
+export const PostJobModal = ({ isOpen, onClose, onSuccess }: PostJobModalProps) => {
     const [formData, setFormData] = useState({
         jobType: '',
         bedrooms: '3 Bedrooms',
@@ -247,6 +254,9 @@ export const PostJobModal = ({ isOpen, onClose }: PostJobModalProps) => {
         try {
             await jobsApi.createJob(payload);
             toastStore.show('Job created successfully!', 'success');
+            if (onSuccess) {
+                onSuccess();
+            }
             onClose();
         } catch (error) {
             toastStore.show(error instanceof Error ? error.message : 'Failed to create job', 'error');
