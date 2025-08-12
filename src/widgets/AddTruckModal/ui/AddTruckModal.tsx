@@ -93,17 +93,17 @@ export const AddTruckModal = ({ onClose, onSuccess }: AddTruckModalProps) => {
                     </p>
                 </div>
 
-                <div className="overflow-y-auto p-8 bg-white">
-                    <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-2 gap-x-8 gap-y-10">
+                <div className="overflow-y-auto p-4 sm:p-6 lg:p-8 bg-white">
+                    <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-2 gap-x-6 lg:gap-x-8 gap-y-8 lg:gap-y-10">
                         {/* Left Column */}
-                        <div className="flex flex-col">
+                        <div className="flex flex-col space-y-8 lg:space-y-0">
                             <section>
                                 <SectionHeader icon={Truck} title="Truck Information" />
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="col-span-2">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div className="sm:col-span-2">
                                         <Input name="truck_name" label="Truck Name *" value={formData.truck_name} onChange={handleInputChange} placeholder="e.g., Blue Thunder" required />
                                     </div>
-                                    <div className="col-span-2">
+                                    <div className="sm:col-span-2">
                                         <Input name="license_plate" label="License Plate *" value={formData.license_plate} onChange={handleInputChange} placeholder="e.g., ABC123" required />
                                     </div>
                                     <div>
@@ -120,22 +120,23 @@ export const AddTruckModal = ({ onClose, onSuccess }: AddTruckModalProps) => {
                                     </div>
                                 </div>
                             </section>
-                             <section className="mt-auto">
+                            
+                            <section className="lg:mt-auto mt-8">
                                 <SectionHeader icon={Ruler} title="Dimensions & Weight" />
-                                 <div className="grid grid-cols-2 gap-4">
-                                     <Input name="length" label="Length (ft) *" value={formData.length} onChange={handleInputChange} type="number" placeholder="e.g., 26" required/>
-                                     <Input name="width" label="Width (ft) *" value={formData.width} onChange={handleInputChange} type="number" placeholder="e.g., 8.5" required/>
-                                     <Input name="height" label="Height (ft) *" value={formData.height} onChange={handleInputChange} type="number" placeholder="e.g., 9.5" required/>
-                                     <Input name="max_weight" label="Max Weight (lbs) *" value={formData.max_weight} onChange={handleInputChange} type="number" placeholder="e.g., 10000" required/>
-                                 </div>
-                             </section>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <Input name="length" label="Length (ft) *" value={formData.length} onChange={handleInputChange} type="number" placeholder="e.g., 26" required/>
+                                    <Input name="width" label="Width (ft) *" value={formData.width} onChange={handleInputChange} type="number" placeholder="e.g., 8.5" required/>
+                                    <Input name="height" label="Height (ft) *" value={formData.height} onChange={handleInputChange} type="number" placeholder="e.g., 9.5" required/>
+                                    <Input name="max_weight" label="Max Weight (lbs) *" value={formData.max_weight} onChange={handleInputChange} type="number" placeholder="e.g., 10000" required/>
+                                </div>
+                            </section>
                         </div>
 
                         {/* Right Column */}
                         <div className="space-y-6">
                             <section>
                                 <SectionHeader icon={Truck} title="Truck Type" />
-                                <div className="grid grid-cols-3 gap-3">
+                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                                     <SelectCard layout="vertical" type="radio" name="truck_type" value="Small" checked={formData.truck_type === 'Small'} onChange={handleTruckTypeChange} icon={<Truck size={24}/>} title="Small (15')" subtitle="1 bedroom" />
                                     <SelectCard layout="vertical" type="radio" name="truck_type" value="Medium" checked={formData.truck_type === 'Medium'} onChange={handleTruckTypeChange} icon={<Truck size={24}/>} title="Medium (20+')" subtitle="2-3 bedrooms" />
                                     <SelectCard layout="vertical" type="radio" name="truck_type" value="Large" checked={formData.truck_type === 'Large'} onChange={handleTruckTypeChange} icon={<Truck size={24}/>} title="Large (26+')" subtitle="3+ bedrooms" />

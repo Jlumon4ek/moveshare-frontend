@@ -18,9 +18,10 @@ interface JobDetailsModalProps {
     jobId: number;
     isOpen: boolean;
     onClose: () => void;
+    onClaimJob?: (job: Job) => void;
 }
 
-export const JobDetailsModal = ({ jobId, isOpen, onClose }: JobDetailsModalProps) => {
+export const JobDetailsModal = ({ jobId, isOpen, onClose, onClaimJob }: JobDetailsModalProps) => {
     const [job, setJob] = React.useState<Job | null>(null);
     const [isLoading, setIsLoading] = React.useState(true);
     const [error, setError] = React.useState<string | null>(null);
@@ -120,6 +121,12 @@ export const JobDetailsModal = ({ jobId, isOpen, onClose }: JobDetailsModalProps
 
     const jobTitle = `${numberOfBedrooms} Bedroom ${jobType.charAt(0).toUpperCase() + jobType.slice(1)} Move`;
 
+    const handleClaimJob = (job: Job) => {
+        if (onClaimJob) {
+            onClaimJob(job);
+        }
+    };
+
     return (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4" onClick={onClose}>
             <div className="bg-white w-full max-w-4xl max-h-[90vh] flex flex-col rounded-2xl shadow-xl" onClick={(e) => e.stopPropagation()}>
@@ -172,7 +179,7 @@ export const JobDetailsModal = ({ jobId, isOpen, onClose }: JobDetailsModalProps
                             />
                         </div>
 
-                        <div className="space-y-6">
+                        <div className="space-y-8">
                             <JobLocations
                                 pickupAddress={pickupAddress}
                                 deliveryAddress={deliveryAddress}
@@ -205,6 +212,8 @@ export const JobDetailsModal = ({ jobId, isOpen, onClose }: JobDetailsModalProps
                     truckSize={truckSize}
                     distanceMiles={distanceMiles}
                     onClose={onClose}
+                    job={jobData}
+                    onClaimJob={handleClaimJob}
                 />
             </div>
         </div>

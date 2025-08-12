@@ -12,12 +12,12 @@ interface ChatListProps {
 
 export const ChatList = ({ chats, activeChatId, onSelectChat }: ChatListProps) => {
   return (
-    <div className="bg-white rounded-2xl shadow-sm h-full flex flex-col p-5">
+    <div className="bg-white rounded-2xl shadow-sm h-full flex flex-col p-4 sm:p-5">
       <div className="relative mb-4">
-        <Input placeholder="Search" className="pl-10" />
-        <Search size={20} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+        <Input placeholder="Search chats..." className="pl-10" />
+        <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
       </div>
-      <div className="flex-1 overflow-y-auto hide-scrollbar -mr-3 pr-3">
+      <div className="flex-1 overflow-y-auto hide-scrollbar -mr-2 sm:-mr-3 pr-2 sm:pr-3">
         <div className="space-y-2">
             {chats.map(chat => (
                 <ChatItem 

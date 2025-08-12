@@ -40,16 +40,13 @@ export const JobDetailsHeader = ({
         <div className="relative bg-gradient-to-br from-[#60A5FA] via-[#60A5FA] to-[#3B82F6] text-white p-5 rounded-t-2xl flex-shrink-0">
             <div className="absolute inset-0 bg-gradient-to-r from-[#60A5FA]/20 to-[#3B82F6]/20"></div>
             <div className="relative">
-                <div className="flex items-center justify-between mb-6">
-                    <button className="flex items-center gap-2 text-white/80 hover:text-white transition-colors">
-                        <ArrowRight size={18} className="rotate-180" />
-                        <span className="text-sm font-medium">Back to Jobs</span>
-                    </button>
+                <div className="flex items-center justify-start mb-6">
                     <button 
                         onClick={onClose}
-                        className="p-2 hover:bg-white/20 rounded-xl transition-colors"
+                        className="flex items-center gap-2 text-white/80 hover:text-white transition-colors"
                     >
-                        <X size={20} />
+                        <ArrowRight size={18} className="rotate-180" />
+                        <span className="text-sm font-medium">Back to Jobs</span>
                     </button>
                 </div>
                 

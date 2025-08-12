@@ -160,7 +160,6 @@ export const ChatWindow = ({ chat }: ChatWindowProps) => {
         <div className="flex flex-col h-full">
             <header className="p-4 border-b border-gray-200 flex-shrink-0">
                  <div className="flex items-center gap-4">
-                    <button className="text-gray-500 hover:text-gray-800 lg:hidden"> <ChevronLeft size={24} /> </button>
                     <div className="w-10 h-10 rounded-full bg-gray-300" />
                     <div>
                         <h3 className="font-bold text-gray-900">{chat.other_user_name}</h3>

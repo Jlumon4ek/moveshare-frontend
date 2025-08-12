@@ -90,17 +90,28 @@ export const PaymentSettings = () => {
 
   return (
     <>
-      <div className="bg-white p-8 rounded-2xl shadow-sm h-full">
-        <div className="flex justify-between items-center mb-6 pb-4 border-b border-gray-200">
-          <h2 className="text-2xl font-bold text-gray-800">
+      <div className="bg-white p-4 sm:p-6 lg:p-8 rounded-2xl shadow-sm h-full flex flex-col">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 pb-4 border-b border-gray-200 gap-4 flex-shrink-0">
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-800">
             Payment Settings
           </h2>
-          <Button size="sm" onClick={() => setIsAddModalOpen(true)}>
-            + Add Payment Method
+          <Button 
+            size="xs" 
+            onClick={() => setIsAddModalOpen(true)}
+            className="w-full sm:w-auto text-sm px-3 py-2"
+          >
+            <span className="sm:hidden">+ Add Method</span>
+            <span className="hidden sm:inline">+ Add Payment Method</span>
           </Button>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Desktop: Original Grid */}
+        <div className="hidden md:grid grid-cols-1 lg:grid-cols-2 gap-6 overflow-y-auto">
+          {renderContent()}
+        </div>
+        
+        {/* Mobile: Vertical Stack with Scroll */}
+        <div className="md:hidden flex flex-col gap-4 flex-1 overflow-y-auto">
           {renderContent()}
         </div>
       </div>

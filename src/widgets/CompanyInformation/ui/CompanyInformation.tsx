@@ -5,7 +5,6 @@ import { Textarea } from '../../../shared/ui/Textarea/Textarea';
 import { companyApi, type CompanyData } from '../../../shared/api/company';
 import { toastStore } from '../../../shared/lib/toast/toastStore';
 
-
 const initialFormState: CompanyData = {
     company_name: '', contact_person: '', email_address: '', phone_number: '',
     address: '', city: '', state: '', zip_code: '',
@@ -25,8 +24,9 @@ export const CompanyInformation = () => {
       try {
         setIsLoading(true);
         const data = await companyApi.getCompanyInfo();
-        setInitialData(data);
-        setFormData(data);
+        const sanitizedData = data || initialFormState;
+        setInitialData(sanitizedData);
+        setFormData(sanitizedData);
         setError(null);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to fetch company data');
@@ -66,19 +66,37 @@ export const CompanyInformation = () => {
   if (error) return <div className="p-8 text-red-500">{error}</div>;
   
   return (
-    <div className="bg-white rounded-2xl shadow-sm h-full flex flex-col overflow-hidden">
-      <div className="flex justify-between items-center p-6 pb-4 border-b border-gray-200 flex-shrink-0">
+    <div className="bg-white rounded-2xl shadow-sm h-full flex flex-col">
+      {/* Desktop Header with Buttons */}
+      <div className="hidden sm:flex flex-row justify-between items-center p-6 pb-4 border-b border-gray-200 flex-shrink-0 gap-4">
         <h2 className="text-2xl font-bold text-gray-800">Company Information</h2>
-        <div className="flex items-center gap-3">
-            <Button variant="outline" size="sm" onClick={handleReset} disabled={isSaving}>Reset</Button>
-            <Button variant="primary" size="sm" onClick={handleSaveChanges} disabled={isSaving}>
+        <div className="flex items-center gap-3 flex-shrink-0">
+            <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={handleReset} 
+                disabled={isSaving}
+            >
+                Reset
+            </Button>
+            <Button 
+                variant="primary" 
+                size="sm" 
+                onClick={handleSaveChanges} 
+                disabled={isSaving}
+            >
                 {isSaving ? 'Saving...' : 'Save Changes'}
             </Button>
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto hide-scrollbar">
-          <form className="p-6 grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
+      {/* Mobile Header without Buttons */}
+      <div className="sm:hidden flex items-center p-4 pb-4 border-b border-gray-200 flex-shrink-0">
+        <h2 className="text-xl font-bold text-gray-800">Company Information</h2>
+      </div>
+
+      <div className="flex-1 overflow-y-auto hide-scrollbar min-h-0">
+          <form className="p-4 sm:p-6 grid grid-cols-1 md:grid-cols-2 gap-x-4 sm:gap-x-6 gap-y-4">
             <Input name="company_name" label="Company Name" value={formData.company_name} onChange={handleInputChange} placeholder="Your Company LLC" />
             <Input name="contact_person" label="Contact Person" value={formData.contact_person} onChange={handleInputChange} placeholder="John Doe" />
             <Input name="email_address" label="Email Address" type="email" value={formData.email_address} onChange={handleInputChange} placeholder="contact@yourcompany.com" disabled />
@@ -91,6 +109,28 @@ export const CompanyInformation = () => {
             <Input name="dot_number" label="DOT Number" value={formData.dot_number} onChange={handleInputChange} placeholder="DOT-9876543" />
             <div className="md:col-span-2">
                 <Textarea name="company_description" label="Company Description" value={formData.company_description} onChange={handleInputChange} placeholder="Describe your company's services..." />
+            </div>
+            
+            {/* Mobile Buttons after fields */}
+            <div className="sm:hidden md:col-span-2 flex flex-col gap-3 pt-4 border-t border-gray-200">
+                <Button 
+                    variant="primary" 
+                    size="md" 
+                    onClick={handleSaveChanges} 
+                    disabled={isSaving}
+                    className="w-full"
+                >
+                    {isSaving ? 'Saving...' : 'Save Changes'}
+                </Button>
+                <Button 
+                    variant="outline" 
+                    size="md" 
+                    onClick={handleReset} 
+                    disabled={isSaving}
+                    className="w-full"
+                >
+                    Reset
+                </Button>
             </div>
           </form>
       </div>

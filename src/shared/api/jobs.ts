@@ -1,4 +1,4 @@
-import { apiRequest } from './config';
+import { apiRequest, apiBlobRequest } from './config';
 import { authStore } from '../lib/auth/authStore';
 
 export interface JobsApiParams {
@@ -206,11 +206,8 @@ export const jobsApi = {
       throw new Error('Not authorized');
     }
 
-    return apiRequest(`/jobs/export-jobs/`, {
+    return apiBlobRequest('/jobs/export-jobs/', {
       method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${accessToken}`,
-      },
       body: JSON.stringify({ job_ids: jobIds }),
     });
   },

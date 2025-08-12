@@ -229,7 +229,7 @@ export const PostJobModal = ({ isOpen, onClose, onSuccess }: PostJobModalProps) 
             hoisting: formData.hoisting,
             additional_services_description: formData.additionalServicesDescription,
             estimated_crew_assistants: formData.crewAssistants,
-            truck_size: formData.truckSize.split(' ')[0].toLowerCase(),
+            truck_size: formData.truckSize.split(' ')[0],
             pickup_address: formData.pickupLocation,
             pickup_floor: formData.pickupFloor ? Number(formData.pickupFloor) : null,
             pickup_building_type: formData.pickupDetails.toLowerCase(),

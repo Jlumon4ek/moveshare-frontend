@@ -82,7 +82,7 @@ export const SignInForm = () => {
           </label>
           <Input
             type="email"
-            placeholder="tolebi_baitassov@gmail.com"
+            placeholder="johndoe@gmail.com"
             value={formData.identifier}
             onChange={handleInputChange('identifier')}
             required
@@ -107,7 +107,7 @@ export const SignInForm = () => {
           <div className="relative">
             <Input
               type={showPassword ? 'text' : 'password'}
-              placeholder="••••••"
+              placeholder="••••••••"
               value={formData.password}
               onChange={handleInputChange('password')}
               required

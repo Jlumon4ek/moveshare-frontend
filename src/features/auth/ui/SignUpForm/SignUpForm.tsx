@@ -71,7 +71,7 @@ export const SignUpForm = () => {
           </label>
           <Input
             type="email"
-            placeholder="yourname@example.com"
+            placeholder="johndoe@gmail.com"
             value={formData.email}
             onChange={handleInputChange('email')}
             required
@@ -111,7 +111,7 @@ export const SignUpForm = () => {
           <div className="relative">
             <Input
               type={showPassword ? 'text' : 'password'}
-              placeholder="••••••"
+              placeholder="••••••••"
               value={formData.password}
               onChange={handleInputChange('password')}
               required

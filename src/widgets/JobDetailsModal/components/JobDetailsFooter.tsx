@@ -1,17 +1,21 @@
 import { Package } from 'lucide-react';
+import { type Job } from '../../../shared/api/jobs';
 
 interface JobDetailsFooterProps {
     cutAmount: number;
     truckSize: string;
     distanceMiles: number;
     onClose: () => void;
+    job: Job;
+    onClaimJob: (job: Job) => void;
 }
 
 export const JobDetailsFooter = ({
     cutAmount,
     truckSize,
     distanceMiles,
-    onClose
+    job,
+    onClaimJob
 }: JobDetailsFooterProps) => {
     const formatTruckSize = (truckSize: string) => {
         switch(truckSize) {
@@ -42,17 +46,16 @@ export const JobDetailsFooter = ({
                     </div>
                 </div>
                 
-                <div className="flex items-center gap-3">
-                    <button 
-                        onClick={onClose}
-                        className="px-6 py-3 border border-gray-300 text-gray-700 text-sm font-medium rounded-xl hover:bg-gray-50 transition-colors"
-                    >
-                        Close
-                    </button>
-                    <button className="px-8 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white text-sm font-bold rounded-xl hover:from-blue-700 hover:to-purple-700 transition-all duration-200 transform hover:scale-105 shadow-lg flex items-center gap-2">
-                        <Package size={20} />
-                        Claim Job
-                    </button>
+                <div className="flex items-center">
+                    {onClaimJob && (
+                        <button 
+                            onClick={() => onClaimJob(job)}
+                            className="px-8 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white text-sm font-bold rounded-xl hover:from-blue-700 hover:to-purple-700 transition-all duration-200 transform hover:scale-105 shadow-lg flex items-center gap-2"
+                        >
+                            <Package size={20} />
+                            Claim Job
+                        </button>
+                    )}
                 </div>
             </div>
         </div>

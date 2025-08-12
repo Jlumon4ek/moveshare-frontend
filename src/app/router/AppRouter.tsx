@@ -6,7 +6,7 @@ import { ResetPasswordPage } from '../../pages/ResetPasswordPage/ResetPasswordPa
 import { ProtectedRoute } from '../../shared/lib/auth/ProtectedRoute';
 import { MainLayout } from '../layouts/MainLayout';
 import { DashboardPage } from '../../pages/DashboardPage/DashboardPage';
-import { ProfilePage } from '../../pages/ProfilePage/ProfilePage'
+import { ProfilePage } from '../../pages/ProfilePage/ProfilePage';
 import { FleetManagement } from '../../widgets/FleetManagement/ui/FleetManagement'; 
 import { CompanyInformation } from '../../widgets/CompanyInformation/ui/CompanyInformation';
 import { PaymentSettings } from '../../widgets/PaymentSettings/ui/PaymentSettings';

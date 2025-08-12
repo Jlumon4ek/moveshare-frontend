@@ -73,16 +73,17 @@ export const ProfileSidebar = () => {
     };
 
     const linkClasses = ({ isActive }: { isActive: boolean }) =>
-    `flex items-center gap-3 p-3 rounded-lg text-sm transition-colors ${
+    `flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-lg text-sm transition-colors ${
       isActive
         ? 'bg-primary/10 text-primary font-semibold'
         : 'text-gray-500 hover:bg-gray-100'
     }`;
 
     return (
-        <aside className="w-80 flex-shrink-0 bg-white p-6 rounded-2xl shadow-sm self-start">
-            <div className="flex flex-col items-center text-center">
-                <div className="mb-4">
+        <aside className="w-full lg:w-80 xl:w-96 flex-shrink-0 bg-white p-4 sm:p-6 rounded-2xl shadow-sm self-start">
+            {/* Profile Header - Responsive Layout */}
+            <div className="flex flex-row lg:flex-col items-center lg:text-center gap-4 lg:gap-0">
+                <div className="flex-shrink-0 mb-0 lg:mb-4">
                     <ProfilePhotoUpload
                         currentPhotoUrl={profilePhotoUrl}
                         onPhotoUpdate={handlePhotoUpdate}
@@ -90,26 +91,29 @@ export const ProfileSidebar = () => {
                             companyData.company_name.substring(0, 2).toUpperCase() : 'TL')}
                     />
                 </div>
-                <h2 className="text-xl font-bold text-gray-800">
-                    {isLoading ? 'Loading...' : companyData?.company_name || 'TransAtlantic Logistics'}
-                </h2>
-                <p className="text-sm text-gray-500">
-                    {isLoading ? 'Loading...' : companyData?.email_address || 'contact@transatlantic.com'}
-                </p>
-                <div className="mt-2 bg-green-100 text-green-700 text-xs font-semibold px-3 py-1 rounded-full">
-                    Verified Account
+                <div className="flex-1 lg:flex-none text-left lg:text-center">
+                    <h2 className="text-lg sm:text-xl font-bold text-gray-800">
+                        {isLoading ? 'Loading...' : companyData?.company_name || 'N/A'}
+                    </h2>
+                    <p className="text-sm text-gray-500 break-all lg:break-normal">
+                        {isLoading ? 'Loading...' : companyData?.email_address}
+                    </p>
+                    <div className="mt-2 inline-block bg-green-100 text-green-700 text-xs font-semibold px-3 py-1 rounded-full">
+                        Verified Account
+                    </div>
                 </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4 my-6 text-center">
-                <div className="bg-gray-50 rounded-xl p-3">
-                    <p className="text-2xl font-bold text-primary">
+            {/* Stats Grid - Responsive */}
+            <div className="grid grid-cols-2 gap-3 sm:gap-4 my-4 sm:my-6 text-center">
+                <div className="bg-gray-50 rounded-xl p-2.5 sm:p-3">
+                    <p className="text-xl sm:text-2xl font-bold text-primary">
                         {isLoading ? '...' : completedJobsCount}
                     </p>
                     <p className="text-xs text-gray-500">Jobs Completed</p>
                 </div>
-                <div className="bg-gray-50 rounded-xl p-3">
-                    <p className="text-2xl font-bold text-primary">
+                <div className="bg-gray-50 rounded-xl p-2.5 sm:p-3">
+                    <p className="text-xl sm:text-2xl font-bold text-primary">
                         {isLoading ? '...' : 
                          ratingStats?.average_rating !== null && ratingStats?.average_rating !== undefined ? 
                          ratingStats.average_rating.toFixed(1) : 'N/A'}
@@ -120,13 +124,33 @@ export const ProfileSidebar = () => {
                 </div>
             </div>
             
-            <nav className="flex flex-col gap-2">
-                {profileNavLinks.map(link => (
-                    <NavLink to={link.to} key={link.to} className={linkClasses} end>
-                        <link.icon size={20} />
-                        <span>{link.label}</span>
-                    </NavLink>
-                ))}
+            {/* Navigation - Responsive */}
+            <nav className="flex flex-col lg:flex-col gap-1.5 sm:gap-2">
+                {/* Mobile horizontal scrolling navigation */}
+                <div className="lg:hidden flex overflow-x-auto hide-scrollbar gap-2 pb-2 -mx-2 px-2">
+                    {profileNavLinks.map(link => (
+                        <NavLink to={link.to} key={link.to} className={({ isActive }) => 
+                            `flex items-center gap-2 p-2.5 rounded-lg text-sm transition-colors whitespace-nowrap flex-shrink-0 ${
+                                isActive
+                                    ? 'bg-primary/10 text-primary font-semibold'
+                                    : 'text-gray-500 hover:bg-gray-100'
+                            }`
+                        } end>
+                            <link.icon size={16} />
+                            <span className="text-xs">{link.label}</span>
+                        </NavLink>
+                    ))}
+                </div>
+                
+                {/* Desktop vertical navigation */}
+                <div className="hidden lg:flex flex-col gap-2">
+                    {profileNavLinks.map(link => (
+                        <NavLink to={link.to} key={link.to} className={linkClasses} end>
+                            <link.icon size={20} />
+                            <span>{link.label}</span>
+                        </NavLink>
+                    ))}
+                </div>
             </nav>
         </aside>
     );

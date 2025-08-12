@@ -1,10 +1,9 @@
-// src/widgets/MyJobsWidget/ui/MyJobsWidget.tsx
-
 import { useState, useEffect, useMemo } from 'react';
 import { jobsApi, type Job } from '../../../shared/api/jobs';
 import { Checkbox } from '../../../shared/ui/Checkbox/Checkbox';
 import { Button } from '../../../shared/ui/Button/Button';
 import { JobDetailsModal } from '../../JobDetailsModal/ui/JobDetailsModal';
+import { toastStore } from '../../../shared/lib/toast/toastStore';
 import { Eye, MapPin, Calendar, Truck, DollarSign, Trash2, AlertTriangle, X } from 'lucide-react';
 import cn from 'classnames';
 
@@ -118,7 +117,7 @@ export const MyJobsWidget = () => {
             setSelectedJobs([]);
         } catch (error) {
             console.error('Failed to export jobs:', error);
-            // You could add a toast notification here for better UX
+            toastStore.show(error instanceof Error ? error.message : 'Failed to export jobs', 'error');
         } finally {
             setIsExporting(false);
         }
@@ -193,23 +192,23 @@ export const MyJobsWidget = () => {
     return (
         <div className="bg-white rounded-2xl shadow-sm h-full flex flex-col overflow-hidden">
             {/* Header with Tabs */}
-            <div className="bg-gradient-to-r from-gray-50 to-white px-6 py-4 border-b border-gray-200">
+            <div className="bg-gradient-to-r from-gray-50 to-white px-4 sm:px-6 py-4 border-b border-gray-200">
                 <div className="flex space-x-1 bg-gray-100 rounded-lg p-1">
                     {TABS.map(tab => (
                         <button 
                             key={tab}
                             onClick={() => setActiveTab(tab)}
                             className={cn(
-                                "flex-1 py-2 px-4 text-sm font-medium capitalize transition-all duration-200 rounded-md",
+                                "flex-1 py-2 px-2 sm:px-4 text-xs sm:text-sm font-medium capitalize transition-all duration-200 rounded-md",
                                 {
                                     'bg-white text-primary shadow-sm': activeTab === tab,
                                     'text-gray-600 hover:text-gray-900 hover:bg-gray-200': activeTab !== tab,
                                 }
                             )}
                         >
-                            {tab} 
+{tab}
                             <span className={cn(
-                                "ml-2 text-xs rounded-full px-2 py-0.5",
+                                "ml-1 sm:ml-2 text-xs rounded-full px-1.5 sm:px-2 py-0.5",
                                 activeTab === tab ? 'bg-primary/10 text-primary' : 'bg-gray-300 text-gray-600'
                             )}>
                                 {jobCounts[tab] || 0}
@@ -219,9 +218,127 @@ export const MyJobsWidget = () => {
                 </div>
             </div>
 
-            {/* Enhanced Table */}
+            {/* Responsive Content: Cards on mobile, Table on desktop */}
             <div className="flex-1 overflow-y-auto">
-                <table className="w-full">
+                {/* Mobile Card Layout */}
+                <div className="md:hidden space-y-4 p-4">
+                    {/* Mobile Select All */}
+                    {filteredJobs.length > 0 && (
+                        <div className="flex items-center gap-3 pb-2">
+                            <Checkbox 
+                                checked={selectedJobs.length === filteredJobs.length && filteredJobs.length > 0} 
+                                onChange={handleSelectAll} 
+                                children={undefined} 
+                            />
+                            <span className="text-sm font-medium text-gray-700">
+                                Select all ({filteredJobs.length})
+                            </span>
+                        </div>
+                    )}
+                    {filteredJobs.map((job) => (
+                        <div key={job.id} className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
+                            {/* Card Header */}
+                            <div className="flex items-center justify-between mb-3">
+                                <div className="flex items-center gap-3">
+                                    <Checkbox 
+                                        checked={selectedJobs.includes(job.id)} 
+                                        onChange={() => handleSelectJob(job.id)} 
+                                        children={undefined} 
+                                    />
+                                    <span className="font-bold text-gray-900 text-lg">#{job.id}</span>
+                                </div>
+                                <span className={cn(
+                                    "inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold capitalize",
+                                    statusStyles[job.job_status]
+                                )}>
+                                    <div className={cn(
+                                        "w-2 h-2 rounded-full mr-1.5",
+                                        job.job_status === 'active' && 'bg-blue-600',
+                                        job.job_status === 'pending' && 'bg-amber-600',
+                                        job.job_status === 'completed' && 'bg-emerald-600',
+                                        job.job_status === 'canceled' && 'bg-red-600'
+                                    )} />
+                                    {job.job_status}
+                                </span>
+                            </div>
+
+                            {/* Route */}
+                            <div className="mb-3">
+                                <div className="flex items-start gap-2">
+                                    <MapPin size={16} className="text-gray-400 mt-1 flex-shrink-0" />
+                                    <div className="min-w-0 flex-1">
+                                        <p className="text-sm font-medium text-gray-900 leading-tight">{job.pickup_address}</p>
+                                        <p className="text-sm text-gray-500 leading-tight">→ {job.delivery_address}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Details Grid */}
+                            <div className="grid grid-cols-2 gap-3 mb-4">
+                                <div>
+                                    <div className="flex items-center gap-1.5 mb-1">
+                                        <Calendar size={14} className="text-gray-400" />
+                                        <span className="text-xs font-medium text-gray-500">Schedule</span>
+                                    </div>
+                                    <p className="text-sm font-medium text-gray-900">
+                                        {new Date(job.pickup_date).toLocaleDateString('en-US', { 
+                                            month: 'short', 
+                                            day: 'numeric' 
+                                        })}
+                                    </p>
+                                    <p className="text-xs text-gray-500">
+                                        to {new Date(job.delivery_date).toLocaleDateString('en-US', { 
+                                            month: 'short', 
+                                            day: 'numeric' 
+                                        })}
+                                    </p>
+                                </div>
+
+                                <div>
+                                    <div className="flex items-center gap-1.5 mb-1">
+                                        <Truck size={14} className="text-gray-400" />
+                                        <span className="text-xs font-medium text-gray-500">Vehicle</span>
+                                    </div>
+                                    <p className="text-sm font-medium text-gray-900 capitalize">{job.truck_size}</p>
+                                </div>
+                            </div>
+
+                            {/* Payment and Actions */}
+                            <div className="flex items-center justify-between pt-3 border-t border-gray-100">
+                                <div className="flex items-center gap-2">
+                                    <DollarSign size={16} className="text-green-600" />
+                                    <span className="text-lg font-bold text-green-600">
+                                        ${job.payment_amount.toLocaleString()}
+                                    </span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <button 
+                                        className="p-2 text-gray-400 hover:text-primary hover:bg-primary/10 rounded-lg transition-colors duration-150"
+                                        onClick={() => handleViewJobDetails(job.id)}
+                                        title="View job details"
+                                    >
+                                        <Eye size={18}/>
+                                    </button>
+                                    <button 
+                                        className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
+                                        onClick={() => handleDeleteJob(job.id)}
+                                        disabled={deletingJobs.has(job.id)}
+                                        title="Delete job"
+                                    >
+                                        {deletingJobs.has(job.id) ? (
+                                            <div className="w-4 h-4 border-2 border-gray-300 border-t-red-600 rounded-full animate-spin" />
+                                        ) : (
+                                            <Trash2 size={18}/>
+                                        )}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+
+                {/* Desktop Table Layout */}
+                <table className="w-full hidden md:table">
                     <thead className="sticky top-0 bg-white shadow-sm z-10">
                         <tr className="border-b border-gray-200">
                             <th className="p-4 w-12">
@@ -296,7 +413,7 @@ export const MyJobsWidget = () => {
                                     <div className="flex items-center gap-2">
                                         <DollarSign size={16} className="text-green-600" />
                                         <span className="text-sm font-bold text-green-600">
-                                            {job.payment_amount.toLocaleString()}
+                                            ${job.payment_amount.toLocaleString()}
                                         </span>
                                     </div>
                                 </td>
@@ -363,7 +480,7 @@ export const MyJobsWidget = () => {
             {/* Enhanced Bulk Actions Footer */}
             {selectedJobs.length > 0 && (
                 <div className="flex-shrink-0 p-4 bg-gradient-to-r from-primary/5 to-primary/10 border-t border-primary/20">
-                    <div className="flex justify-between items-center">
+                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
                         <div className="flex items-center gap-3">
                             <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
                                 <span className="text-white text-sm font-bold">{selectedJobs.length}</span>
@@ -372,25 +489,30 @@ export const MyJobsWidget = () => {
                                 {selectedJobs.length} job{selectedJobs.length > 1 ? 's' : ''} selected
                             </p>
                         </div>
-                        <div className="flex gap-3">
+                        <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
                             <Button 
                                 variant="outline" 
                                 size="sm" 
-                                className="bg-white"
+                                className="bg-white w-full sm:w-auto"
                                 onClick={handleExportJobs}
                                 disabled={isExporting || selectedJobs.length === 0}
                             >
                                 {isExporting ? (
                                     <div className="flex items-center gap-2">
                                         <div className="w-4 h-4 border-2 border-gray-400 border-t-gray-700 rounded-full animate-spin" />
-                                        Exporting...
+                                        <span className="hidden sm:inline">Exporting...</span>
+                                        <span className="sm:hidden">Exporting</span>
                                     </div>
                                 ) : (
-                                    'Export to CSV'
+                                    <>
+                                        <span className="hidden sm:inline">Export to CSV</span>
+                                        <span className="sm:hidden">Export CSV</span>
+                                    </>
                                 )}
                             </Button>
-                            <Button variant="danger" size="sm">
-                                Cancel Selected
+                            <Button variant="danger" size="sm" className="w-full sm:w-auto">
+                                <span className="hidden sm:inline">Cancel Selected</span>
+                                <span className="sm:hidden">Cancel</span>
                             </Button>
                         </div>
                     </div>
@@ -400,7 +522,7 @@ export const MyJobsWidget = () => {
             {/* Delete Confirmation Modal */}
             {deleteModal.isOpen && (
                 <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4" onClick={() => setDeleteModal({ isOpen: false, jobId: null })}>
-                    <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden" onClick={(e) => e.stopPropagation()}>
+                    <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-hidden overflow-y-auto" onClick={(e) => e.stopPropagation()}>
                         {/* Header */}
                         <div className="px-6 py-4 bg-red-50 border-b border-red-100">
                             <div className="flex items-center justify-between">
@@ -480,7 +602,7 @@ export const MyJobsWidget = () => {
                                         </div>
 
                                         {/* Schedule and Payment */}
-                                        <div className="grid grid-cols-2 gap-4">
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                             <div className="bg-white rounded-lg p-4 border">
                                                 <div className="flex items-center gap-2 mb-2">
                                                     <Calendar size={16} className="text-blue-500" />
@@ -522,10 +644,11 @@ export const MyJobsWidget = () => {
                         </div>
 
                         {/* Actions */}
-                        <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-end gap-3">
+                        <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex flex-col sm:flex-row justify-end gap-3">
                             <Button 
                                 variant="outline" 
                                 size="sm"
+                                className="w-full sm:w-auto"
                                 onClick={() => setDeleteModal({ isOpen: false, jobId: null })}
                                 disabled={deleteModal.jobId ? deletingJobs.has(deleteModal.jobId) : false}
                             >
@@ -534,6 +657,7 @@ export const MyJobsWidget = () => {
                             <Button 
                                 variant="danger" 
                                 size="sm"
+                                className="w-full sm:w-auto"
                                 onClick={confirmDeleteJob}
                                 disabled={deleteModal.jobId ? deletingJobs.has(deleteModal.jobId) : false}
                             >

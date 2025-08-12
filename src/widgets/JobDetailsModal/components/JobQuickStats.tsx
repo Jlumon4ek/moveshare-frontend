@@ -18,7 +18,7 @@ export const JobQuickStats = ({
             <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-4 rounded-2xl border border-green-200">
                 <div className="flex items-center gap-3 mb-2">
                     <DollarSign size={20} className="text-green-600" />
-                    <span className="text-xs font-bold text-green-700">Your Cut</span>
+                    <span className="text-xs font-bold text-green-700">Your Earnings</span>
                 </div>
                 <p className="text-lg font-bold text-green-800">${cutAmount.toLocaleString()}</p>
             </div>

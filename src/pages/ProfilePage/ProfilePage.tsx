@@ -5,26 +5,18 @@ import { ProfileSidebar } from '../../widgets/ProfileSidebar/ui/ProfileSidebar';
 export const ProfilePage = () => {
   return (
     <div className="h-full flex flex-col">
-      <header className="flex justify-between items-center flex-shrink-0">
-        <h1 className="text-3xl font-bold text-gray-800">Profile</h1>
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-3 text-right">
-            <div>
-              <p className="font-semibold text-gray-800">Tolebi Baitassov</p>
-              <p className="text-sm text-gray-500">Carrier</p>
-            </div>
-            <div className="w-10 h-10 rounded-full bg-gray-200" />
-          </div>
-        </div>
+      {/* Responsive Header */}
+      <header className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 flex-shrink-0">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">Profile</h1>
       </header>
 
       {/* Divider Line */}
-      <hr className="my-4 border-gray-200 flex-shrink-0" />
+      <hr className="my-4 sm:my-6 border-gray-200 flex-shrink-0" />
 
-      {/* Main Content Area */}
-      <div className="flex-1 flex gap-6 overflow-hidden">
+      {/* Main Content Area - Responsive Layout */}
+      <div className="flex-1 flex flex-col lg:flex-row gap-4 sm:gap-6 lg:gap-8 overflow-hidden">
         <ProfileSidebar />
-        <div className="flex-1 overflow-hidden">
+        <div className="flex-1 overflow-hidden min-w-0">
           <Outlet />
         </div>
       </div>
