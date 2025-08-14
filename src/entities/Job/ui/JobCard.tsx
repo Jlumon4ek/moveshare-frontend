@@ -3,7 +3,7 @@ import { ArrowRight, Calendar, Weight, Truck, Maximize } from 'lucide-react';
 import type { Job } from '../../../shared/api/jobs';
 import { Button } from '../../../shared/ui/Button/Button';
 import { JobTag } from './JobTag';
-import JobCardMap from '../../../shared/assets/icons/job-card-map.svg';
+import { RouteMap } from '../../../shared/ui/RouteMap/RouteMap';
 
 interface JobCardProps {
   job: Job & {
@@ -61,7 +61,11 @@ export const JobCard = ({ job, onClaimClick, onViewDetailsClick }: JobCardProps)
       </div>
 
       <div className="mb-4">
-        <img src={JobCardMap} alt="Route Map" className="w-full h-auto rounded-lg object-cover" />
+        <RouteMap 
+          pickupAddress={job.pickup_address}
+          deliveryAddress={job.delivery_address}
+          className="w-full rounded-lg"
+        />
       </div>
 
       {/* Responsive Details Grid */}

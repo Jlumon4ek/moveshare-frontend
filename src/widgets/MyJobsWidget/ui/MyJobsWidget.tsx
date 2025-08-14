@@ -21,7 +21,7 @@ export const MyJobsWidget = () => {
     const [jobs, setJobs] = useState<Job[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [activeTab, setActiveTab] = useState<Status>('pending'); // Изменено на pending
+    const [activeTab, setActiveTab] = useState<Status>('active');
     const [selectedJobs, setSelectedJobs] = useState<number[]>([]);
     const [deletingJobs, setDeletingJobs] = useState<Set<number>>(new Set());
     const [deleteModal, setDeleteModal] = useState<{ isOpen: boolean; jobId: number | null; jobDetails?: Job }>({ 
