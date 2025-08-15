@@ -6,30 +6,29 @@ import { jobsApi, type Job } from '../../shared/api/jobs';
 import { Pagination } from '../../shared/ui/Pagination/Pagination';
 
 // Определяем возможные статусы
-type JobStatus = 'active' | 'in_progress' | 'completed' | 'disputed' | 'rejected' | 'cancelled';
+type JobStatus = 'active' | 'pending' | 'completed' | 'canceled';
 
 // Extend Job type with mapped status
 type MappedJob = Omit<Job, 'job_status'> & {
     job_status: JobStatus;
 };
-const TABS: JobStatus[] = ['active', 'in_progress', 'completed', 'disputed'];
+const TABS: JobStatus[] = ['active', 'pending', 'completed', 'canceled'];
 
 // Map backend status to frontend status
 const mapJobStatus = (backendStatus: string): JobStatus => {
     switch (backendStatus) {
         case 'claimed':
-            return 'active';
         case 'in_progress':
-            return 'in_progress';
+            return 'active';
+        case 'pending':
+            return 'pending';
         case 'completed':
             return 'completed';
         case 'disputed':
-            return 'disputed';
         case 'rejected':
-            return 'rejected';
         case 'cancelled':
         case 'canceled':
-            return 'cancelled';
+            return 'canceled';
         default:
             return 'active'; // fallback
     }
