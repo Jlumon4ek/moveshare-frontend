@@ -10,6 +10,23 @@ import cn from 'classnames';
 type Status = 'active' | 'pending' | 'completed' | 'canceled';
 const TABS: Status[] = ['active', 'pending', 'completed', 'canceled'];
 
+// Map backend status to frontend status
+const mapJobStatus = (backendStatus: string): Status => {
+    switch (backendStatus) {
+        case 'open':
+            return 'active';
+        case 'pending':
+            return 'pending';
+        case 'completed':
+            return 'completed';
+        case 'canceled':
+        case 'cancelled':
+            return 'canceled';
+        default:
+            return 'pending'; // fallback
+    }
+};
+
 const statusStyles: Record<Status, string> = {
     active: 'bg-blue-50 text-blue-700 border border-blue-200',
     pending: 'bg-amber-50 text-amber-700 border border-amber-200',
@@ -38,7 +55,12 @@ export const MyJobsWidget = () => {
         try {
             setIsLoading(true);
             const response = await jobsApi.getMyJobs();
-            setJobs(response.jobs || []);
+            // Map backend statuses to frontend statuses
+            const mappedJobs = (response.jobs || []).map(job => ({
+                ...job,
+                job_status: mapJobStatus(job.job_status)
+            }));
+            setJobs(mappedJobs);
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Failed to fetch jobs');
         } finally {
@@ -308,7 +330,7 @@ export const MyJobsWidget = () => {
                                 <div className="flex items-center gap-2">
                                     <DollarSign size={16} className="text-green-600" />
                                     <span className="text-lg font-bold text-green-600">
-                                        ${job.payment_amount.toLocaleString()}
+                                        {job.payment_amount.toLocaleString()}
                                     </span>
                                 </div>
                                 <div className="flex items-center gap-2">
@@ -373,26 +395,26 @@ export const MyJobsWidget = () => {
                                 <td className="p-4">
                                     <span className="font-bold text-gray-900 text-base">#{job.id}</span>
                                 </td>
-                                <td className="p-4">
+                                <td className="p-4 max-w-xs">
                                     <div className="flex items-start gap-2">
                                         <MapPin size={16} className="text-gray-400 mt-0.5 flex-shrink-0" />
-                                        <div className="min-w-0">
-                                            <p className="text-sm font-medium text-gray-900 truncate">{job.pickup_address}</p>
-                                            <p className="text-sm text-gray-500 truncate">→ {job.delivery_address}</p>
+                                        <div className="min-w-0 overflow-hidden">
+                                            <p className="text-sm font-medium text-gray-900 break-words">{job.pickup_address}</p>
+                                            <p className="text-sm text-gray-500 break-words">→ {job.delivery_address}</p>
                                         </div>
                                     </div>
                                 </td>
-                                <td className="p-4">
+                                <td className="p-4 w-36 min-w-36">
                                     <div className="flex items-center gap-2">
                                         <Calendar size={16} className="text-gray-400" />
                                         <div>
-                                            <p className="text-sm font-medium text-gray-900">
+                                            <p className="text-sm font-medium text-gray-900 whitespace-nowrap">
                                                 {new Date(job.pickup_date).toLocaleDateString('en-US', { 
                                                     month: 'short', 
                                                     day: 'numeric' 
                                                 })}
                                             </p>
-                                            <p className="text-xs text-gray-500">
+                                            <p className="text-xs text-gray-500 whitespace-nowrap">
                                                 to {new Date(job.delivery_date).toLocaleDateString('en-US', { 
                                                     month: 'short', 
                                                     day: 'numeric' 
@@ -413,7 +435,7 @@ export const MyJobsWidget = () => {
                                     <div className="flex items-center gap-2">
                                         <DollarSign size={16} className="text-green-600" />
                                         <span className="text-sm font-bold text-green-600">
-                                            ${job.payment_amount.toLocaleString()}
+                                            {job.payment_amount.toLocaleString()}
                                         </span>
                                     </div>
                                 </td>

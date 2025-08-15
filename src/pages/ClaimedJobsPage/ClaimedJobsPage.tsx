@@ -7,14 +7,40 @@ import { Pagination } from '../../shared/ui/Pagination/Pagination';
 
 // Определяем возможные статусы
 type JobStatus = 'active' | 'in_progress' | 'completed' | 'disputed' | 'rejected' | 'cancelled';
+
+// Extend Job type with mapped status
+type MappedJob = Omit<Job, 'job_status'> & {
+    job_status: JobStatus;
+};
 const TABS: JobStatus[] = ['active', 'in_progress', 'completed', 'disputed'];
+
+// Map backend status to frontend status
+const mapJobStatus = (backendStatus: string): JobStatus => {
+    switch (backendStatus) {
+        case 'claimed':
+            return 'active';
+        case 'in_progress':
+            return 'in_progress';
+        case 'completed':
+            return 'completed';
+        case 'disputed':
+            return 'disputed';
+        case 'rejected':
+            return 'rejected';
+        case 'cancelled':
+        case 'canceled':
+            return 'cancelled';
+        default:
+            return 'active'; // fallback
+    }
+};
 
 const ITEMS_PER_PAGE = 10;
 
 
 export const ClaimedJobsPage = () => {
     const [activeTab, setActiveTab] = useState<JobStatus>('active');
-    const [jobs, setJobs] = useState<Job[]>([]);
+    const [jobs, setJobs] = useState<MappedJob[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [currentPage, setCurrentPage] = useState(1);
@@ -29,7 +55,12 @@ export const ClaimedJobsPage = () => {
                     page: currentPage, 
                     limit: ITEMS_PER_PAGE 
                 });
-                setJobs(response.jobs || []);
+                // Map backend statuses to frontend statuses
+                const mappedJobs = (response.jobs || []).map(job => ({
+                    ...job,
+                    job_status: mapJobStatus(job.job_status)
+                }));
+                setJobs(mappedJobs);
                 setTotalJobs(response.pagination.total);
             } catch (err) {
                 setError(err instanceof Error ? err.message : 'Failed to fetch claimed jobs');
@@ -41,12 +72,12 @@ export const ClaimedJobsPage = () => {
     }, [currentPage]);
 
     const filteredJobs = useMemo(() => {
-        return jobs.filter(job => job.job_status.replace('_', ' ') === activeTab);
+        return jobs.filter(job => job.job_status === activeTab);
     }, [jobs, activeTab]);
 
     const jobCounts = useMemo(() => {
         return TABS.reduce((acc, status) => {
-            acc[status] = jobs.filter(job => job.job_status.replace('_', ' ') === status).length;
+            acc[status] = jobs.filter(job => job.job_status === status).length;
             return acc;
         }, {} as Record<JobStatus, number>);
     }, [jobs]);

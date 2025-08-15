@@ -1,9 +1,11 @@
 // src/widgets/ClaimedJobCard/ui/ClaimedJobCard.tsx
+import { useState } from 'react';
 import { Briefcase, Calendar, MapPin, Paperclip, UploadCloud } from 'lucide-react';
 import { JobProgressTracker } from '../../../features/JobProgressTracker/ui/JobProgressTracker';
 import { DocumentPreview } from '../../../entities/DocumentPreview/ui/DocumentPreview';
 import { Button } from '../../../shared/ui/Button/Button';
-import type { Job } from '../../../shared/api/jobs';
+import { jobsApi, type Job } from '../../../shared/api/jobs';
+import { toastStore } from '../../../shared/lib/toast/toastStore';
 
 interface ClaimedJobCardProps {
     job: Job;
@@ -22,7 +24,41 @@ const InfoBlock = ({ title, icon, children }: {title: string, icon: React.ReactN
 
 
 export const ClaimedJobCard = ({ job }: ClaimedJobCardProps) => {
+  const [isMarkingCompleted, setIsMarkingCompleted] = useState(false);
   const jobTitle = `${job.number_of_bedrooms} Bedroom ${job.job_type} move`;
+
+  const getProgressStep = (status: string) => {
+    switch (status) {
+      case 'pending':
+        return 1; // Claimed
+      case 'active':
+        return 2; // Documents Shared
+      case 'in_transit':
+        return 3; // In Transit
+      case 'completed':
+        return 4; // Completed
+      default:
+        return 1; // Default to first step
+    }
+  };
+
+  const handleMarkAsDelivered = async () => {
+    setIsMarkingCompleted(true);
+    try {
+      await jobsApi.markJobCompleted(job.id);
+      toastStore.show('Job marked as completed successfully!', 'success');
+      // Optionally refresh the page or update the job status
+      window.location.reload();
+    } catch (error) {
+      console.error('Failed to mark job as completed:', error);
+      toastStore.show(
+        error instanceof Error ? error.message : 'Failed to mark job as completed',
+        'error'
+      );
+    } finally {
+      setIsMarkingCompleted(false);
+    }
+  };
   
   return (
     <div className="bg-white p-6 rounded-2xl shadow-sm">
@@ -35,7 +71,7 @@ export const ClaimedJobCard = ({ job }: ClaimedJobCardProps) => {
       </div>
 
       <div className="mb-8">
-        <JobProgressTracker currentStep={3} />
+        <JobProgressTracker currentStep={getProgressStep(job.job_status)} />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
@@ -75,7 +111,13 @@ export const ClaimedJobCard = ({ job }: ClaimedJobCardProps) => {
 
       <div className="flex justify-between items-center border-t border-gray-200 pt-4">
           <Button variant="outline">Open Chat</Button>
-          <Button variant="primary">Mark as Delivered</Button>
+          <Button 
+            variant="primary" 
+            onClick={handleMarkAsDelivered}
+            disabled={isMarkingCompleted}
+          >
+            {isMarkingCompleted ? 'Marking...' : 'Mark as Delivered'}
+          </Button>
       </div>
     </div>
   );

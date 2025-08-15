@@ -212,4 +212,55 @@ export const jobsApi = {
     });
   },
 
+  markJobCompleted: async (jobId: number): Promise<{ message: string }> => {
+    const { accessToken } = authStore.getState();
+    if (!accessToken) {
+      throw new Error('Not authorized');
+    }
+
+    return apiRequest(`/jobs/mark-job-completed/${jobId}/`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+      },
+    });
+  },
+
+  getUserWorkStats: async (): Promise<{
+    completed_jobs: number;
+    earnings: number;
+    upcoming_jobs: number;
+  }> => {
+    const { accessToken } = authStore.getState();
+    if (!accessToken) {
+      throw new Error('Not authorized');
+    }
+
+    return apiRequest('/jobs/user-work-stats/', {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+      },
+    });
+  },
+
+  getTodaySchedule: async (): Promise<{
+    id: number;
+    pickup_time_from: string;
+    job_type: string;
+    number_of_bedrooms: string;
+  }[]> => {
+    const { accessToken } = authStore.getState();
+    if (!accessToken) {
+      throw new Error('Not authorized');
+    }
+
+    return apiRequest('/jobs/today-schedule/', {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+      },
+    });
+  },
+
 };

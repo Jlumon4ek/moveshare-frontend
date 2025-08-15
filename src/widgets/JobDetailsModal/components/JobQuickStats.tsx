@@ -13,6 +13,15 @@ export const JobQuickStats = ({
     estimatedCrewAssistants,
     weightLbs
 }: JobQuickStatsProps) => {
+    const formatCrewSize = (crewSize: string) => {
+        switch(crewSize) {
+            case 'driver_only': return 'Driver only';
+            case 'driver_1': return 'Driver + 1 Assistant';
+            case 'driver_2': return 'Driver + 2 Assistants';
+            case 'driver_3': return 'Driver + 3 Assistants';
+            default: return crewSize;
+        }
+    };
     return (
         <div className="grid grid-cols-4 gap-4">
             <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-4 rounded-2xl border border-green-200">
@@ -34,7 +43,7 @@ export const JobQuickStats = ({
                     <Users size={20} className="text-purple-600" />
                     <span className="text-xs font-bold text-purple-700">Crew</span>
                 </div>
-                <p className="text-lg font-bold text-purple-800">{estimatedCrewAssistants}</p>
+                <p className="text-lg font-bold text-purple-800">{formatCrewSize(estimatedCrewAssistants)}</p>
             </div>
             <div className="bg-gradient-to-br from-orange-50 to-amber-50 p-4 rounded-2xl border border-orange-200">
                 <div className="flex items-center gap-3 mb-2">
