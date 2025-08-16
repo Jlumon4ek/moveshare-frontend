@@ -17,6 +17,7 @@ import { AvailableJobsPage } from '../../pages/AvailableJobsPage/AvailableJobsPa
 import { ChatsPage } from '../../pages/ChatsPage/ChatsPage';
 import { WelcomePage } from '../../pages/WelcomePage/WelcomePage';
 import { ClaimedJobsPage } from '../../pages/ClaimedJobsPage/ClaimedJobsPage';
+import { AdminDashboardPage } from '../../pages/AdminDashboardPage/AdminDashboardPage';
 
 
 export const AppRouter = () => {
@@ -71,6 +72,7 @@ export const AppRouter = () => {
           <Route path="available-jobs" element={<AvailableJobsPage />} />
           <Route path="chats" element={<ChatsPage />} /> 
           <Route path="claimed-jobs" element={<ClaimedJobsPage />} /> 
+          <Route path="admin" element={<AdminDashboardPage />} /> // [!code ++]
 
           <Route path="profile" element={<ProfilePage />}>
             <Route index element={<Navigate to="company" replace />} />
