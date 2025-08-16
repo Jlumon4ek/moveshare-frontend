@@ -1,7 +1,19 @@
 import { Button } from '../../shared/ui/Button/Button';
 import { PlusCircle, Filter, Eye, Edit, Trash2 } from 'lucide-react';
 
-const jobs = [
+type JobStatus = 'Active' | 'Pending' | 'Cancelled';
+
+interface Job {
+  id: string;
+  size: string;
+  from: string;
+  to: string;
+  date: string;
+  payout: string;
+  status: JobStatus;
+}
+
+const jobs: Job[] = [
   { id: '#J84501', size: '1 bedroom', from: 'New York', to: 'Boston', date: 'Jun 25, 2023', payout: '$2,400', status: 'Active' },
   { id: '#J84502', size: '1 bedroom', from: 'Chicago', to: 'Detroit', date: 'Jun 28, 2023', payout: '$1,800', status: 'Active' },
   { id: '#J84503', size: '3 bedrooms', from: 'Los Angeles', to: 'San Francisco', date: 'Jul 5, 2023', payout: '$3,200', status: 'Pending' },
@@ -9,7 +21,7 @@ const jobs = [
   { id: '#J84505', size: '1 bedroom', from: 'Dallas', to: 'Houston', date: 'Jul 3, 2023', payout: '$1,500', status: 'Cancelled' },
 ];
 
-const statusColors = {
+const statusColors: Record<JobStatus, string> = {
   'Active': 'bg-blue-100 text-blue-700',
   'Pending': 'bg-yellow-100 text-yellow-700',
   'Cancelled': 'bg-red-100 text-red-700',

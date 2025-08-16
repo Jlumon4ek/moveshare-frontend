@@ -1,7 +1,18 @@
 import { Button } from '../../shared/ui/Button/Button';
 import { PlusCircle, Eye, Edit, Trash2 } from 'lucide-react';
 
-const users = [
+type UserStatus = 'Approved' | 'Pending' | 'Rejected';
+
+interface User {
+  id: string;
+  company: string;
+  email: string;
+  trucks: number;
+  status: UserStatus;
+  joined: string;
+}
+
+const users: User[] = [
   { id: 'MU#001', company: 'Relocation Pro LLC', email: 'contact@relocationpro.com', trucks: 8, status: 'Approved', joined: 'Jun 13, 2023' },
   { id: 'MU#002', company: 'City Movers Inc', email: 'info@citymovers.com', trucks: 12, status: 'Approved', joined: 'May 28, 2023' },
   { id: 'MU#003', company: 'Fast Delivery Services', email: 'admin@fastdelivery.com', trucks: 5, status: 'Pending', joined: 'Jun 15, 2023' },
@@ -9,7 +20,7 @@ const users = [
   { id: 'MU#005', company: 'Quick Move Solutions', email: 'contact@quickmove.com', trucks: 6, status: 'Rejected', joined: 'Jun 10, 2023' },
 ];
 
-const statusColors = {
+const statusColors: Record<UserStatus, string> = {
   'Approved': 'bg-green-100 text-green-700',
   'Pending': 'bg-yellow-100 text-yellow-700',
   'Rejected': 'bg-red-100 text-red-700',
