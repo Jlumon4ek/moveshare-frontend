@@ -45,6 +45,16 @@ export const reviewsApi = {
   },
 
   /**
+   * Fetch average rating for a specific user
+   * Note: Authorization header is automatically added by apiRequest
+   */
+  getAverage: async (userId: number): Promise<ReviewStats> => {
+    return apiRequest(`/reviews/average/${userId}`, {
+      method: 'GET',
+    });
+  },
+
+  /**
    * Create a new review for a job
    */
   create: async (reviewData: CreateReviewRequest): Promise<CreateReviewResponse> => {

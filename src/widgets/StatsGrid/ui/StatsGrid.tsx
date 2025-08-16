@@ -2,6 +2,8 @@ import { Briefcase, DollarSign, Truck, Star } from 'lucide-react';
 import { StatCard } from '../../../entities/StatCard/ui/StatCard';
 import { useEffect, useState } from 'react';
 import { jobsApi } from '../../../shared/api/jobs'; // Update with correct path
+import { reviewsApi, type ReviewStats } from '../../../shared/api/reviews';
+import { authStore } from '../../../shared/lib/auth/authStore';
 
 interface JobStats {
   active_jobs_count: number;
@@ -11,6 +13,7 @@ interface JobStats {
 
 export const StatsGrid = () => {
   const [jobStats, setJobStats] = useState<JobStats | null>(null);
+  const [reviewStats, setReviewStats] = useState<ReviewStats | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -18,8 +21,14 @@ export const StatsGrid = () => {
       try {
         const stats = await jobsApi.getJobStats();
         setJobStats(stats);
+        
+        const authState = authStore.getState();
+        if (authState.user?.user_id) {
+          const ratings = await reviewsApi.getAverage(authState.user.user_id);
+          setReviewStats(ratings);
+        }
       } catch (error) {
-        console.error('Error fetching job stats:', error);
+        console.error('Error fetching stats:', error);
       } finally {
         setLoading(false);
       }
@@ -43,27 +52,27 @@ export const StatsGrid = () => {
     },
     {
       title: 'Monthly Earnings',
-      value: '$8,450', // Keep hardcoded as this data isn't in the API response
+      value: `$${(0).toLocaleString()}`, // Keep hardcoded as this data isn't in the API response
       icon: <DollarSign size={24} className="text-green-500" />,
       iconBgClass: 'bg-green-100',
-      change: '15%',
+      change: '0',
       changeDescription: 'from last month',
     },
     {
       title: 'Truck Utilization',
-      value: '78%', // Keep hardcoded as this data isn't in the API response
+      value: 'Soon',
       icon: <Truck size={24} className="text-orange-500" />,
       iconBgClass: 'bg-orange-100',
-      change: '12%',
-      changeDescription: 'improvement',
+      change: undefined,
+      changeDescription: 'coming soon',
     },
     {
       title: 'Your Rating',
-      value: '4.8/5', // Keep hardcoded as this data isn't in the API response
+      value: reviewStats?.average_rating ? `${reviewStats.average_rating.toFixed(1)}/5` : 'No ratings',
       icon: <Star size={24} className="text-purple-500" />,
       iconBgClass: 'bg-purple-100',
       change: undefined,
-      changeDescription: '24 reviews',
+      changeDescription: `${reviewStats?.total_reviews || 0} reviews`,
     },
   ];
 

@@ -115,10 +115,8 @@ export const DashboardSummary = () => {
 
       {/* Notifications Card */}
       <SummaryCard icon={<Bell size={24} />} title="Notifications">
-         <div className="space-y-2 text-sm text-gray-700">
-          <p>New job matches your route: <span className="font-bold text-gray-900">Boston to NYC</span></p>
-          <p>Payment received: <span className="font-bold text-gray-900">$1,200</span></p>
-          <p>New message from <span className="font-bold text-gray-900">City Movers Inc</span></p>
+         <div className="text-sm text-gray-500">
+          <p>No new notifications</p>
         </div>
       </SummaryCard>
     </div>

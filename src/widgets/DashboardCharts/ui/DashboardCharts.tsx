@@ -5,12 +5,12 @@ import { jobsApi } from '../../../shared/api/jobs'; // Update with correct path
 
 // --- Данные для графика "Monthly Earnings" (keep hardcoded for now) ---
 const earningsData = [
-  { name: 'Jan', earnings: 6500 },
-  { name: 'Feb', earnings: 7200 },
-  { name: 'Mar', earnings: 7800 },
-  { name: 'Apr', earnings: 8100 },
-  { name: 'May', earnings: 7900 },
-  { name: 'Jun', earnings: 8400 },
+  { name: 'Jan', earnings: 0 },
+  { name: 'Feb', earnings: 0 },
+  { name: 'Mar', earnings: 0 },
+  { name: 'Apr', earnings: 0 },
+  { name: 'May', earnings: 0 },
+  { name: 'Jun', earnings: 0 },
 ];
 
 const COLORS = ['#84CC16', '#3B82F6', '#A855F7', '#F97316', '#EF4444'];

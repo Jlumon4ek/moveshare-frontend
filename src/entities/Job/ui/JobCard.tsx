@@ -36,7 +36,7 @@ export const JobCard = ({ job, onClaimClick, onViewDetailsClick }: JobCardProps)
         <div className="min-w-0 flex-1">
           <h3 className="text-base sm:text-lg font-bold text-gray-900 break-words">{jobTitle}</h3>
           <div className="flex flex-col sm:flex-row sm:items-center text-sm text-gray-500 gap-1 sm:gap-2 mt-1">
-            <span className="whitespace-nowrap">{job.distance_miles} mi from you</span>
+            <span className="whitespace-nowrap">{job.distance_miles.toFixed(1)} mi</span>
             {job.isHotDeal && (
               <div className="flex items-center gap-2">
                 <span className="hidden sm:inline text-gray-300">•</span>
