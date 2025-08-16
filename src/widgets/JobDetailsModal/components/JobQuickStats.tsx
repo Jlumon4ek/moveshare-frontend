@@ -6,7 +6,6 @@ interface JobQuickStatsProps {
     estimatedCrewAssistants: string;
     weightLbs: number;
 }
-
 export const JobQuickStats = ({
     cutAmount,
     distanceMiles,
@@ -23,7 +22,7 @@ export const JobQuickStats = ({
         }
     };
     return (
-        <div className="grid grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-4 rounded-2xl border border-green-200">
                 <div className="flex items-center gap-3 mb-2">
                     <DollarSign size={20} className="text-green-600" />
@@ -36,7 +35,7 @@ export const JobQuickStats = ({
                     <MapPin size={20} className="text-[#60A5FA]" />
                     <span className="text-xs font-bold text-[#3B82F6]">Distance</span>
                 </div>
-                <p className="text-lg font-bold text-[#1E40AF]">{distanceMiles} mi</p>
+                <p className="text-lg font-bold text-[#1E40AF]">{distanceMiles.toFixed(2)} mi</p>
             </div>
             <div className="bg-gradient-to-br from-purple-50 to-violet-50 p-4 rounded-2xl border border-purple-200">
                 <div className="flex items-center gap-3 mb-2">

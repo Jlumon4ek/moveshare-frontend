@@ -1,6 +1,7 @@
 import React from 'react';
 import { X } from 'lucide-react';
 import { jobsApi, type Job } from '../../../shared/api/jobs';
+import { authStore } from '../../../shared/lib/auth/authStore';
 import {
     JobDetailsHeader,
     JobQuickStats,
@@ -127,6 +128,11 @@ export const JobDetailsModal = ({ jobId, isOpen, onClose, onClaimJob }: JobDetai
         }
     };
 
+    // Проверяем, является ли текущий пользователь владельцем работы
+    const authState = authStore.getState();
+    const currentUserId = authState.user?.user_id;
+    const isOwner = currentUserId && contractorId && currentUserId === Number(contractorId);
+
     return (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4" onClick={onClose}>
             <div className="bg-white w-full max-w-4xl max-h-[90vh] flex flex-col rounded-2xl shadow-xl" onClick={(e) => e.stopPropagation()}>
@@ -191,11 +197,13 @@ export const JobDetailsModal = ({ jobId, isOpen, onClose, onClaimJob }: JobDetai
                                 deliveryWalkDistance={deliveryWalkDistance}
                             />
 
-                            <JobCreator
-                                contractorId={contractorId}
-                                createdAt={createdAt}
-                                jobStatus={jobStatus}
-                            />
+                            {!isOwner && (
+                                <JobCreator
+                                    contractorId={contractorId}
+                                    createdAt={createdAt}
+                                    jobStatus={jobStatus}
+                                />
+                            )}
 
                             <PaymentBreakdown
                                 paymentAmount={paymentAmount}
@@ -213,7 +221,7 @@ export const JobDetailsModal = ({ jobId, isOpen, onClose, onClaimJob }: JobDetai
                     distanceMiles={distanceMiles}
                     onClose={onClose}
                     job={jobData}
-                    onClaimJob={handleClaimJob}
+                    onClaimJob={!isOwner ? handleClaimJob : undefined}
                 />
             </div>
         </div>

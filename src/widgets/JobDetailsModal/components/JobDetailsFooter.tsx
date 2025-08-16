@@ -7,7 +7,7 @@ interface JobDetailsFooterProps {
     distanceMiles: number;
     onClose: () => void;
     job: Job;
-    onClaimJob: (job: Job) => void;
+    onClaimJob?: (job: Job) => void;
 }
 
 export const JobDetailsFooter = ({
